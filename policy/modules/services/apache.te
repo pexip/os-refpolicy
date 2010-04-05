@@ -372,6 +372,7 @@ seutil_dontaudit_search_config(httpd_t)
 
 userdom_use_unpriv_users_fds(httpd_t)
 
+
 mta_send_mail(httpd_t)
 
 tunable_policy(`allow_httpd_anon_write',`
@@ -418,6 +419,14 @@ tunable_policy(`httpd_enable_ftp_server',`
 tunable_policy(`httpd_enable_homedirs',`
 	userdom_read_user_home_content_files(httpd_t)
 ')
+optional_policy(`
+	gen_require(`
+		bool daemon_access_unconfined_home;
+	')
+	tunable_policy(`httpd_enable_homedirs && daemon_access_unconfined_home', `
+			unconfined_read_home_content_files(httpd_t)
+	')
+')
 
 tunable_policy(`httpd_enable_homedirs && use_nfs_home_dirs',`
 	fs_read_nfs_files(httpd_t)
@@ -451,7 +460,10 @@ optional_policy(`
 ')
 
 optional_policy(`
+# for cron jobs to restart Apache
 	cron_system_entry(httpd_t, httpd_exec_t)
+# For cron jobs to run from accounts with home directories in the web store
+	crond_search_dir(httpd_sys_content_t)
 ')
 
 optional_policy(`
@@ -461,6 +473,11 @@ optional_policy(`
 optional_policy(`
 	kerberos_use(httpd_t)
 	kerberos_read_kdc_config(httpd_t)
+')
+
+optional_policy(`
+        # read munin files
+        munin_search_lib(httpd_t)
 ')
 
 optional_policy(`
@@ -648,6 +665,14 @@ tunable_policy(`httpd_enable_cgi && httpd_unified',`
 tunable_policy(`httpd_enable_homedirs',`
 	userdom_read_user_home_content_files(httpd_suexec_t)
 ')
+optional_policy(`
+	gen_require(`
+		bool daemon_access_unconfined_home;
+	')
+	tunable_policy(`httpd_enable_homedirs && daemon_access_unconfined_home', `
+			unconfined_read_home_content_files(httpd_suexec_t)
+	')
+')
 
 tunable_policy(`httpd_enable_homedirs && use_nfs_home_dirs',`
 	fs_read_nfs_files(httpd_suexec_t)
@@ -705,6 +730,14 @@ ifdef(`distro_redhat',`
 
 tunable_policy(`httpd_enable_homedirs',`
 	userdom_read_user_home_content_files(httpd_sys_script_t)
+')
+optional_policy(`
+	gen_require(`
+		bool daemon_access_unconfined_home;
+	')
+	tunable_policy(`httpd_enable_homedirs && daemon_access_unconfined_home', `
+			unconfined_read_home_content_files(httpd_sys_script_t)
+	')
 ')
 
 tunable_policy(`httpd_enable_homedirs && use_nfs_home_dirs',`

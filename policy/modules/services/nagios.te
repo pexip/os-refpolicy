@@ -30,6 +30,9 @@ type nrpe_t;
 type nrpe_exec_t;
 init_daemon_domain(nrpe_t, nrpe_exec_t)
 
+type nrpe_var_run_t;
+files_pid_file(nrpe_var_run_t)
+
 type nrpe_etc_t;
 files_config_file(nrpe_etc_t)
 
@@ -166,15 +169,39 @@ optional_policy(`
 # Nagios remote plugin executor local policy
 #
 
-dontaudit nrpe_t self:capability sys_tty_config;
+dontaudit nrpe_t self:capability { sys_tty_config };
+allow nrpe_t self:capability { setgid setuid };
 allow nrpe_t self:process { setpgid signal_perms };
 allow nrpe_t self:fifo_file rw_fifo_file_perms;
 
+manage_files_pattern(nrpe_t, nrpe_var_run_t, nrpe_var_run_t)
+files_pid_filetrans(nrpe_t, nrpe_var_run_t, file)
+
+type nrpe_tmp_t;
+files_tmp_file(nrpe_tmp_t)
+manage_dirs_pattern(nrpe_t, nrpe_tmp_t, nrpe_tmp_t)
+manage_files_pattern(nrpe_t, nrpe_tmp_t, nrpe_tmp_t)
+files_tmp_filetrans(nrpe_t, nrpe_tmp_t, { file dir })
+
 allow nrpe_t nrpe_etc_t:file read_file_perms;
+files_read_etc_files(nrpe_t)
 files_search_etc(nrpe_t)
+allow nrpe_t nagios_etc_t:dir list_dir_perms;
 
 kernel_read_system_state(nrpe_t)
 kernel_read_kernel_sysctls(nrpe_t)
+
+corenet_all_recvfrom_unlabeled(nrpe_t)
+corenet_all_recvfrom_netlabel(nrpe_t)
+corenet_tcp_sendrecv_all_if(nrpe_t)
+corenet_tcp_sendrecv_all_nodes(nrpe_t)
+corenet_tcp_sendrecv_generic_port(nrpe_t)
+corenet_tcp_bind_all_nodes(nrpe_t)
+corenet_tcp_bind_nrpe_port(nrpe_t)
+allow nrpe_t self:tcp_socket create_stream_socket_perms;
+sysnet_dns_name_resolve(nrpe_t)
+
+allow nrpe_t self:netlink_route_socket create_netlink_socket_perms;
 
 corecmd_exec_bin(nrpe_t)
 corecmd_exec_shell(nrpe_t)
@@ -194,6 +221,15 @@ miscfiles_read_localization(nrpe_t)
 
 userdom_dontaudit_use_unpriv_user_fds(nrpe_t)
 
+domain_read_all_domains_state(nrpe_t)
+fs_getattr_all_fs(nrpe_t)
+storage_getattr_fixed_disk_dev(nrpe_t)
+init_read_utmp(nrpe_t)
+
+term_dontaudit_getattr_all_user_ttys(nrpe_t)
+term_dontaudit_getattr_unallocated_ttys(nrpe_t)
+term_dontaudit_getattr_all_user_ptys(nrpe_t)
+
 optional_policy(`
 	inetd_tcp_service_domain(nrpe_t, nrpe_exec_t)
 ')
@@ -208,4 +244,15 @@ optional_policy(`
 
 optional_policy(`
 	udev_read_db(nrpe_t)
+')
+
+optional_policy(`
+        mysql_tcp_connect(nrpe_t)
+        mysql_stream_connect(nrpe_t)
+       mysql_read_config(nrpe_t)
+')
+
+optional_policy(`
+        postgresql_tcp_connect(nrpe_t)
+        postgresql_stream_connect(nrpe_t)
 ')

@@ -344,7 +344,7 @@ manage_files_pattern(cupsd_config_t, cupsd_rw_etc_t, cupsd_rw_etc_t)
 manage_lnk_files_pattern(cupsd_config_t, cupsd_rw_etc_t, cupsd_rw_etc_t)
 files_var_filetrans(cupsd_config_t, cupsd_rw_etc_t, file)
 
-can_exec(cupsd_config_t, cupsd_config_exec_t) 
+can_exec(cupsd_config_t, cupsd_config_exec_t)
 
 allow cupsd_config_t cupsd_log_t:file rw_file_perms;
 

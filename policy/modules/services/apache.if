@@ -109,6 +109,10 @@ template(`apache_content_template',`
 
 	seutil_dontaudit_search_config(httpd_$1_script_t)
 
+	allow httpd_t httpd_$1_content_t:dir list_dir_perms;
+	read_files_pattern(httpd_t,httpd_$1_content_t,httpd_$1_content_t)
+	read_lnk_files_pattern(httpd_t,httpd_$1_content_t,httpd_$1_content_t)
+
 	tunable_policy(`httpd_enable_cgi && httpd_unified',`
 		allow httpd_$1_script_t httpdcontent:file entrypoint;
 
@@ -122,7 +126,7 @@ template(`apache_content_template',`
 		miscfiles_manage_public_files(httpd_$1_script_t)
 	') 
 
-	# Allow the web server to run scripts and serve pages
+	# Allow the web server to run scripts
 	tunable_policy(`httpd_builtin_scripting',`
 		manage_dirs_pattern(httpd_t, httpd_$1_script_rw_t, httpd_$1_script_rw_t)
 		manage_files_pattern(httpd_t, httpd_$1_script_rw_t, httpd_$1_script_rw_t)

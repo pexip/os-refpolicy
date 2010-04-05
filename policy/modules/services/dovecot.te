@@ -158,6 +158,7 @@ optional_policy(`
 # dovecot auth local policy
 #
 
+manage_sock_files_pattern(dovecot_auth_t,dovecot_var_run_t,dovecot_var_run_t)
 allow dovecot_auth_t self:capability { chown dac_override setgid setuid };
 allow dovecot_auth_t self:process signal_perms;
 allow dovecot_auth_t self:fifo_file rw_fifo_file_perms;
@@ -259,4 +260,14 @@ userdom_user_home_dir_filetrans_user_home_content(dovecot_deliver_t, { dir file 
 
 optional_policy(`
 	mta_manage_spool(dovecot_deliver_t)
+')
+
+optional_policy(`
+       mysql_tcp_connect(dovecot_auth_t)
+       mysql_stream_connect(dovecot_auth_t)
+')
+
+optional_policy(`
+       postgresql_tcp_connect(dovecot_auth_t)
+       postgresql_stream_connect(dovecot_auth_t)
 ')

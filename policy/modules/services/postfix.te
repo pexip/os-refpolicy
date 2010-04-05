@@ -205,6 +205,23 @@ optional_policy(`
 	sendmail_signal(postfix_master_t)
 ')
 
+###########################################################
+#
+# Partially converted rules.  THESE ARE ONLY TEMPORARY
+#
+
+mta_etc_filetrans_aliases(postfix_master_t)
+allow postfix_master_t etc_aliases_t:file manage_file_perms;
+
+ifdef(`distro_redhat',`
+	# for newer main.cf that uses /etc/aliases
+	allow postfix_master_t etc_aliases_t:dir manage_dir_perms;
+	allow postfix_master_t etc_aliases_t:lnk_file manage_lnk_file_perms;
+	filetrans_pattern(postfix_master_t,postfix_etc_t,etc_aliases_t,{ dir file lnk_file })
+')
+
+# end partially converted rules
+
 ########################################
 #
 # Postfix bounce local policy
@@ -244,6 +261,10 @@ manage_lnk_files_pattern(postfix_cleanup_t, postfix_spool_t, postfix_spool_t)
 allow postfix_cleanup_t postfix_spool_bounce_t:dir list_dir_perms;
 
 corecmd_exec_bin(postfix_cleanup_t)
+
+# for milters - may be a bug in postfix
+allow postfix_cleanup_t postfix_smtpd_t:fd use;
+allow postfix_cleanup_t postfix_smtpd_t:unix_stream_socket { getattr read write };
 
 ########################################
 #
@@ -546,6 +567,10 @@ optional_policy(`
 ')
 
 optional_policy(`
+	clamav_stream_connect(postfix_smtpd_t)
+')
+
+optional_policy(`
 	sasl_connect(postfix_smtpd_t)
 ')
 
@@ -565,6 +590,7 @@ files_tmp_filetrans(postfix_virtual_t, postfix_virtual_tmp_t, { file dir })
 
 # connect to master process
 stream_connect_pattern(postfix_virtual_t, postfix_public_t, postfix_public_t, postfix_master_t)
+write_sock_files_pattern(postfix_virtual_t,postfix_private_t,postfix_private_t)
 
 corecmd_exec_shell(postfix_virtual_t)
 corecmd_exec_bin(postfix_virtual_t)
@@ -576,3 +602,8 @@ mta_delete_spool(postfix_virtual_t)
 # For reading spamassasin
 mta_read_config(postfix_virtual_t)
 mta_manage_spool(postfix_virtual_t)
+
+# for talking to spamass-milter
+optional_policy(`
+	spamassassin_connect_unix_sock(postfix_smtpd_t)
+')

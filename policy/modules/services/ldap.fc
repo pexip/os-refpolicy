@@ -5,7 +5,7 @@
 /usr/sbin/slapd		--	gen_context(system_u:object_r:slapd_exec_t,s0)
 
 ifdef(`distro_debian',`
-/usr/lib/slapd		--	gen_context(system_u:object_r:slapd_exec_t,s0)
+/usr/lib/slapd         --      gen_context(system_u:object_r:slapd_exec_t,s0)
 ')
 
 /var/lib/ldap(/.*)?		gen_context(system_u:object_r:slapd_db_t,s0)

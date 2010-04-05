@@ -623,12 +623,12 @@ interface(`xserver_use_all_users_fonts',`
 
 ########################################
 ## <summary>
-##	Read all users .Xauthority.
+##    Read all users .Xauthority.
 ## </summary>
 ## <param name="domain">
-##	<summary>
-##	Domain allowed access.
-##	</summary>
+##    <summary>
+##    Domain allowed access.
+##    </summary>
 ## </param>
 #
 interface(`xserver_read_user_xauth',`

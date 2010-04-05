@@ -1,4 +1,5 @@
 /dev/log		-s	gen_context(system_u:object_r:devlog_t,s0)
+/dev/xconsole		-p	gen_context(system_u:object_r:xconsole_device_t,s0)
 
 /etc/rsyslog.conf		gen_context(system_u:object_r:syslog_conf_t,s0)
 /etc/syslog.conf		gen_context(system_u:object_r:syslog_conf_t,s0)

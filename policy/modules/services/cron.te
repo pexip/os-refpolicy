@@ -256,6 +256,8 @@ optional_policy(`
 
 optional_policy(`
 	amavis_search_lib(crond_t)
+	# for bayes maintainance scripts
+	amavis_domtrans(crond_t)
 ')
 
 optional_policy(`
@@ -284,6 +286,13 @@ optional_policy(`
 optional_policy(`
 	udev_read_db(crond_t)
 ')
+
+optional_policy(`
+        #  allow crond to search logrotate jobs
+	logrotate_search_varlib(crond_t)
+')
+
+
 
 ########################################
 #
@@ -464,7 +473,8 @@ optional_policy(`
 ')
 
 optional_policy(`
-	mysql_read_config(system_cronjob_t)
+	mysql_read_config(system_crond_t)
+        mysql_stream_connect(system_crond_t)
 ')
 
 optional_policy(`
