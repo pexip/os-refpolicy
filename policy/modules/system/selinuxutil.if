@@ -6,7 +6,7 @@
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -28,12 +28,12 @@ interface(`seutil_domtrans_checkpolicy',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the checkpolicy domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -74,7 +74,7 @@ interface(`seutil_exec_checkpolicy',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -95,12 +95,12 @@ interface(`seutil_domtrans_loadpolicy',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the load_policy domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -158,7 +158,7 @@ interface(`seutil_read_loadpolicy',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -180,25 +180,23 @@ interface(`seutil_domtrans_newrole',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the newrole domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
 #
 interface(`seutil_run_newrole',`
 	gen_require(`
-		type newrole_t;
+		attribute_role newrole_roles;
 	')
 
 	seutil_domtrans_newrole($1)
-	role $2 types newrole_t;
-
-	auth_run_upd_passwd(newrole_t, $2)
+	roleattribute $2 newrole_roles;
 ')
 
 ########################################
@@ -228,7 +226,7 @@ interface(`seutil_exec_newrole',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -244,11 +242,21 @@ interface(`seutil_dontaudit_signal_newrole',`
 ## <summary>
 ##	Send a SIGCHLD signal to newrole.
 ## </summary>
+## <desc>
+##	<p>
+##	Allow the specified domain to send a SIGCHLD
+##	signal to newrole.  This signal is automatically
+##	sent from a process that is terminating to
+##	its parent.  This may be needed by domains
+##	that are executed from newrole.
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
 ##	Domain allowed access.
 ##	</summary>
 ## </param>
+## <infoflow type="write" weight="1"/>
 #
 interface(`seutil_sigchld_newrole',`
 	gen_require(`
@@ -301,7 +309,7 @@ interface(`seutil_dontaudit_use_newrole_fds',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -318,12 +326,12 @@ interface(`seutil_domtrans_restorecon',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the restorecon domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -355,7 +363,7 @@ interface(`seutil_exec_restorecon',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -381,7 +389,7 @@ interface(`seutil_domtrans_runinit',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -405,27 +413,23 @@ interface(`seutil_init_script_domtrans_runinit',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the run_init domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
 #
 interface(`seutil_run_runinit',`
 	gen_require(`
-		type run_init_t;
-		role system_r;
+		attribute_role run_init_roles;
 	')
 
-	auth_run_chk_passwd(run_init_t, $2)
 	seutil_domtrans_runinit($1)
-	role $2 types run_init_t;
-
-	allow $2 system_r;
+	roleattribute $2 run_init_roles;
 ')
 
 ########################################
@@ -446,26 +450,22 @@ interface(`seutil_run_runinit',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the run_init domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 #
 interface(`seutil_init_script_run_runinit',`
 	gen_require(`
-		type run_init_t;
-		role system_r;
+		attribute_role run_init_roles;
 	')
 
-	auth_run_chk_passwd(run_init_t, $2)
 	seutil_init_script_domtrans_runinit($1)
-	role $2 types run_init_t;
-
-	allow $2 system_r;
+	roleattribute $2 run_init_roles;
 ')
 
 ########################################
@@ -492,7 +492,7 @@ interface(`seutil_use_runinit_fds',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -514,12 +514,12 @@ interface(`seutil_domtrans_setfiles',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the setfiles domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -793,7 +793,7 @@ interface(`seutil_read_file_contexts',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -1005,25 +1005,23 @@ interface(`seutil_domtrans_semanage',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the checkpolicy domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
 #
 interface(`seutil_run_semanage',`
 	gen_require(`
-		type semanage_t;
+		attribute_role semanage_roles;
 	')
 
 	seutil_domtrans_semanage($1)
-	seutil_run_setfiles(semanage_t, $2)
-	seutil_run_loadpolicy(semanage_t, $2)
-	role $2 types semanage_t;
+	roleattribute $2 semanage_roles;
 ')
 
 ########################################
@@ -1045,7 +1043,7 @@ interface(`seutil_manage_module_store',`
 	files_search_etc($1)
 	manage_dirs_pattern($1, selinux_config_t, semanage_store_t)
 	manage_files_pattern($1, semanage_store_t, semanage_store_t)
-	filetrans_pattern($1, selinux_config_t, semanage_store_t, dir)
+	manage_lnk_files_pattern($1, semanage_store_t, semanage_store_t)
 ')
 
 #######################################
@@ -1131,7 +1129,7 @@ interface(`seutil_libselinux_linked',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #

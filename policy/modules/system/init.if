@@ -6,16 +6,28 @@
 ## </summary>
 ## <desc>
 ##	<p>
-##	Create a file type used for init scripts.
-##	Can not be used in conjunction with
-##	init_script_domain().
+##	Create a file type used for init scripts.  It can not be
+##	used in conjunction with init_script_domain(). These
+##	script files are typically stored in the /etc/init.d directory.
+##	</p>
+##	<p>
+##	Typically this is used to constrain what services an
+##	admin can start/stop.  For example, a policy writer may want
+##	to constrain a web administrator to only being able to
+##	restart the web server, not other services.  This special type
+##	will help address that goal.
+##	</p>
+##	<p>
+##	This also makes the type usable for files; thus an
+##	explicit call to files_type() is redundant.
 ##	</p>
 ## </desc>
 ## <param name="script_file">
 ##	<summary>
-##	Type of the script file used as an entry point to this domain.
+##	Type to be used for a script file.
 ##	</summary>
 ## </param>
+## <infoflow type="none"/>
 #
 interface(`init_script_file',`
 	gen_require(`
@@ -64,6 +76,8 @@ interface(`init_script_domain',`
 	domain_type($1)
 	domain_entry_file($1, $2)
 
+	role system_r types $1;
+
 	domtrans_pattern(init_run_all_scripts_domain, $2, $1)
 ')
 
@@ -89,11 +103,11 @@ interface(`init_domain',`
 	')
 
 	domain_type($1)
-	domain_entry_file($1,$2)
+	domain_entry_file($1, $2)
 
 	role system_r types $1;
 
-	domtrans_pattern(init_t,$2,$1)
+	domtrans_pattern(init_t, $2, $1)
 
 	ifdef(`hide_broken_symptoms',`
 		# RHEL4 systems seem to have a stray
@@ -130,7 +144,7 @@ interface(`init_ranged_domain',`
 		type init_t;
 	')
 
-	init_domain($1,$2)
+	init_domain($1, $2)
 
 	ifdef(`enable_mcs',`
 		range_transition init_t $2:process $3;
@@ -145,11 +159,29 @@ interface(`init_ranged_domain',`
 ########################################
 ## <summary>
 ##	Create a domain for long running processes
-##	(daemons) which can be started by init scripts.
+##	(daemons/services) which are started by init scripts.
 ## </summary>
+## <desc>
+##	<p>
+##	Create a domain for long running processes (daemons/services)
+##	which are started by init scripts. Short running processes
+##	should use the init_system_domain() interface instead.
+##	Typically all long running processes started by an init
+##	script (usually in /etc/init.d) will need to use this
+##	interface.
+##	</p>
+##	<p>
+##	The types will be made usable as a domain and file, making
+##	calls to domain_type() and files_type() redundant.
+##	</p>
+##	<p>
+##	If the process must also run in a specific MLS/MCS level,
+##	the init_ranged_daemon_domain() should be used instead.
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Type to be used as a domain.
+##	Type to be used as a daemon domain.
 ##	</summary>
 ## </param>
 ## <param name="entry_point">
@@ -157,10 +189,10 @@ interface(`init_ranged_domain',`
 ##	Type of the program to be used as an entry point to this domain.
 ##	</summary>
 ## </param>
+## <infoflow type="read" weight="10"/>
 #
 interface(`init_daemon_domain',`
 	gen_require(`
-		attribute direct_run_init, direct_init, direct_init_entry;
 		type initrc_t;
 		role system_r;
 		attribute daemon;
@@ -169,28 +201,22 @@ interface(`init_daemon_domain',`
 	typeattribute $1 daemon;
 
 	domain_type($1)
-	domain_entry_file($1,$2)
+	domain_entry_file($1, $2)
 
 	role system_r types $1;
 
-	domtrans_pattern(initrc_t,$2,$1)
+	domtrans_pattern(initrc_t, $2, $1)
 
 	# daemons started from init will
 	# inherit fds from init for the console
 	init_dontaudit_use_fds($1)
 	term_dontaudit_use_console($1)
 
-	# init script ptys are the stdin/out/err 
+	# init script ptys are the stdin/out/err
 	# when using run_init
 	init_use_script_ptys($1)
 
 	ifdef(`direct_sysadm_daemon',`
-		domtrans_pattern(direct_run_init,$2,$1)
-		allow direct_run_init $1:process { noatsecure siginh rlimitinh };
-
-		typeattribute $1 direct_init;
-		typeattribute $2 direct_init_entry;
-
 		userdom_dontaudit_use_user_terminals($1)
 	')
 
@@ -203,18 +229,38 @@ interface(`init_daemon_domain',`
 	')
 
 	optional_policy(`
-		nscd_socket_use($1)
+		nscd_use($1)
 	')
 ')
 
 ########################################
 ## <summary>
 ##	Create a domain for long running processes
-##	(daemons) which can be started by init scripts.
+##	(daemons/services) which are started by init scripts,
+##	running at a specified MLS/MCS range.
 ## </summary>
+## <desc>
+##	<p>
+##	Create a domain for long running processes (daemons/services)
+##	which are started by init scripts, running at a specified
+##	MLS/MCS range. Short running processes
+##	should use the init_ranged_system_domain() interface instead.
+##	Typically all long running processes started by an init
+##	script (usually in /etc/init.d) will need to use this
+##	interface if they need to run in a specific MLS/MCS range.
+##	</p>
+##	<p>
+##	The types will be made usable as a domain and file, making
+##	calls to domain_type() and files_type() redundant.
+##	</p>
+##	<p>
+##	If the policy build option TYPE is standard (MLS and MCS disabled),
+##	this interface has the same behavior as init_daemon_domain().
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Type to be used as a domain.
+##	Type to be used as a daemon domain.
 ##	</summary>
 ## </param>
 ## <param name="entry_point">
@@ -224,16 +270,17 @@ interface(`init_daemon_domain',`
 ## </param>
 ## <param name="range">
 ##	<summary>
-##	Range for the domain.
+##	MLS/MCS range for the domain.
 ##	</summary>
 ## </param>
+## <infoflow type="read" weight="10"/>
 #
 interface(`init_ranged_daemon_domain',`
 	gen_require(`
 		type initrc_t;
 	')
 
-	init_daemon_domain($1,$2)
+	init_daemon_domain($1, $2)
 
 	ifdef(`enable_mcs',`
 		range_transition initrc_t $2:process $3;
@@ -248,11 +295,31 @@ interface(`init_ranged_daemon_domain',`
 ########################################
 ## <summary>
 ##	Create a domain for short running processes
-##	which can be started by init scripts.
+##	which are started by init scripts.
 ## </summary>
+## <desc>
+##	<p>
+##	Create a domain for short running processes
+##	which are started by init scripts. These are generally applications that
+##	are used to initialize the system during boot.
+##	Long running processes, such as daemons/services
+##	should use the init_daemon_domain() interface instead.
+##	Typically all short running processes started by an init
+##	script (usually in /etc/init.d) will need to use this
+##	interface.
+##	</p>
+##	<p>
+##	The types will be made usable as a domain and file, making
+##	calls to domain_type() and files_type() redundant.
+##	</p>
+##	<p>
+##	If the process must also run in a specific MLS/MCS level,
+##	the init_ranged_system_domain() should be used instead.
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Type to be used as a domain.
+##	Type to be used as a system domain.
 ##	</summary>
 ## </param>
 ## <param name="entry_point">
@@ -260,6 +327,7 @@ interface(`init_ranged_daemon_domain',`
 ##	Type of the program to be used as an entry point to this domain.
 ##	</summary>
 ## </param>
+## <infoflow type="read" weight="10"/>
 #
 interface(`init_system_domain',`
 	gen_require(`
@@ -267,13 +335,11 @@ interface(`init_system_domain',`
 		role system_r;
 	')
 
-	application_domain($1,$2)
+	application_domain($1, $2)
 
 	role system_r types $1;
 
-	domtrans_pattern(initrc_t,$2,$1)
-
-	init_use_fds($1)
+	domtrans_pattern(initrc_t, $2, $1)
 
 	ifdef(`hide_broken_symptoms',`
 		# RHEL4 systems seem to have a stray
@@ -287,11 +353,32 @@ interface(`init_system_domain',`
 ########################################
 ## <summary>
 ##	Create a domain for short running processes
-##	which can be started by init scripts.
+##	which are started by init scripts.
 ## </summary>
+## <desc>
+##	<p>
+##	Create a domain for long running processes (daemons/services)
+##	which are started by init scripts.
+##	These are generally applications that
+##	are used to initialize the system during boot.
+##	Long running processes
+##	should use the init_ranged_system_domain() interface instead.
+##	Typically all short running processes started by an init
+##	script (usually in /etc/init.d) will need to use this
+##	interface if they need to run in a specific MLS/MCS range.
+##	</p>
+##	<p>
+##	The types will be made usable as a domain and file, making
+##	calls to domain_type() and files_type() redundant.
+##	</p>
+##	<p>
+##	If the policy build option TYPE is standard (MLS and MCS disabled),
+##	this interface has the same behavior as init_system_domain().
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
-##	Type to be used as a domain.
+##	Type to be used as a system domain.
 ##	</summary>
 ## </param>
 ## <param name="entry_point">
@@ -304,13 +391,14 @@ interface(`init_system_domain',`
 ##	Range for the domain.
 ##	</summary>
 ## </param>
+## <infoflow type="read" weight="10"/>
 #
 interface(`init_ranged_system_domain',`
 	gen_require(`
 		type initrc_t;
 	')
 
-	init_system_domain($1,$2)
+	init_system_domain($1, $2)
 
 	ifdef(`enable_mcs',`
 		range_transition initrc_t $2:process $3;
@@ -318,7 +406,35 @@ interface(`init_ranged_system_domain',`
 
 	ifdef(`enable_mls',`
 		range_transition initrc_t $2:process $3;
+		mls_rangetrans_target($1)
 	')
+')
+
+########################################
+## <summary>
+##	Mark the file type as a daemon run dir, allowing initrc_t
+##	to create it
+## </summary>
+## <param name="filetype">
+##	<summary>
+##	Type to mark as a daemon run dir
+##	</summary>
+## </param>
+## <param name="filename">
+##	<summary>
+##	Filename of the directory that the init script creates
+##	</summary>
+## </param>
+#
+interface(`init_daemon_run_dir',`
+	gen_require(`
+		attribute daemonrundir;
+		type initrc_t;
+	')
+
+	typeattribute $1 daemonrundir;
+
+	files_pid_filetrans(initrc_t, $1, dir, $2)
 ')
 
 ########################################
@@ -327,7 +443,7 @@ interface(`init_ranged_system_domain',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -357,6 +473,36 @@ interface(`init_exec',`
 
 	corecmd_search_bin($1)
 	can_exec($1, init_exec_t)
+')
+
+########################################
+## <summary>
+##	Execute the rc application in the caller domain.
+## </summary>
+## <desc>
+## <p>
+##	This is only applicable to Gentoo or distributions that use the OpenRC
+##	init system.
+## </p>
+## <p>
+##	The OpenRC /sbin/rc binary is used for both init scripts as well as
+##	management applications and tools. When used for management purposes,
+##	calling /sbin/rc should never cause a transition to initrc_t.
+## </p>
+## </desc>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`init_exec_rc',`
+	gen_require(`
+		type rc_exec_t;
+	')
+
+	corecmd_search_bin($1)
+	can_exec($1, rc_exec_t)
 ')
 
 ########################################
@@ -415,13 +561,71 @@ interface(`init_sigchld',`
 
 ########################################
 ## <summary>
-##	Inherit and use file descriptors from init.
+##	Connect to init with a unix socket.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
 ##	Domain allowed access.
 ##	</summary>
 ## </param>
+#
+interface(`init_stream_connect',`
+	gen_require(`
+		type init_t;
+	')
+
+	allow $1 init_t:unix_stream_socket connectto;
+')
+
+########################################
+## <summary>
+##	Inherit and use file descriptors from init.
+## </summary>
+## <desc>
+##	<p>
+##	Allow the specified domain to inherit file
+##	descriptors from the init program (process ID 1).
+##	Typically the only file descriptors to be
+##	inherited from init are for the console.
+##	This does not allow the domain any access to
+##	the object to which the file descriptors references.
+##	</p>
+##	<p>
+##	Related interfaces:
+##	</p>
+##	<ul>
+##		<li>init_dontaudit_use_fds()</li>
+##		<li>term_dontaudit_use_console()</li>
+##		<li>term_use_console()</li>
+##	</ul>
+##	<p>
+##	Example usage:
+##	</p>
+##	<p>
+##	init_use_fds(mydomain_t)
+##	term_use_console(mydomain_t)
+##	</p>
+##	<p>
+##	Normally, processes that can inherit these file
+##	descriptors (usually services) write messages to the
+##	system log instead of writing to the console.
+##	Therefore, in many cases, this access should
+##	dontaudited instead.
+##	</p>
+##	<p>
+##	Example dontaudit usage:
+##	</p>
+##	<p>
+##	init_dontaudit_use_fds(mydomain_t)
+##	term_dontaudit_use_console(mydomain_t)
+##	</p>
+## </desc>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <infoflow type="read" weight="1"/>
 #
 interface(`init_use_fds',`
 	gen_require(`
@@ -438,7 +642,7 @@ interface(`init_use_fds',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -597,7 +801,7 @@ interface(`init_dontaudit_rw_initctl',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The domain for which init scripts are an entrypoint.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 # cjp: added for gentoo integrated run_init
@@ -615,7 +819,7 @@ interface(`init_script_file_entry_type',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -626,6 +830,14 @@ interface(`init_spec_domtrans_script',`
 
 	files_list_etc($1)
 	spec_domtrans_pattern($1, initrc_exec_t, initrc_t)
+
+	ifdef(`distro_gentoo',`
+		gen_require(`
+			type rc_exec_t;
+		')
+
+		domtrans_pattern($1, rc_exec_t, initrc_t)
+	')
 
 	ifdef(`enable_mcs',`
 		range_transition $1 initrc_exec_t:process s0;
@@ -642,7 +854,7 @@ interface(`init_spec_domtrans_script',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -679,7 +891,7 @@ interface(`init_domtrans_script',`
 ## </desc>
 ## <param name="source_domain">
 ##	<summary>
-##	Domain to transition from.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="target_domain">
@@ -694,7 +906,7 @@ interface(`init_script_file_domtrans',`
 	')
 
 	files_list_etc($1)
-	domain_auto_trans($1, initrc_exec_t,$2)
+	domain_auto_trans($1, initrc_exec_t, $2)
 ')
 
 ########################################
@@ -704,7 +916,7 @@ interface(`init_script_file_domtrans',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="init_script_file">
@@ -729,7 +941,7 @@ interface(`init_labeled_script_domtrans',`
 ## </summary>
 ## <param name="domain">
 ## 	<summary>
-##		Domain allowed access
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -765,12 +977,14 @@ interface(`init_all_labeled_script_domtrans',`
 #
 interface(`init_run_daemon',`
 	gen_require(`
-		attribute direct_run_init, direct_init, direct_init_entry;
+                attribute init_script_file_type;
 		role system_r;
 	')
 
-	typeattribute $1 direct_run_init;
-	role_transition $2 direct_init_entry system_r;
+	allow $2 system_r;
+
+        init_all_labeled_script_domtrans($1)
+        role_transition $2 init_script_file_type system_r;
 ')
 
 ########################################
@@ -785,7 +999,7 @@ interface(`init_run_daemon',`
 #
 interface(`init_read_state',`
 	gen_require(`
-		attribute init_t;
+		type init_t;
 	')
 
 	allow $1 init_t:dir search_dir_perms;
@@ -806,7 +1020,7 @@ interface(`init_read_state',`
 #
 interface(`init_ptrace',`
 	gen_require(`
-		attribute init_t;
+		type init_t;
 	')
 
 	allow $1 init_t:process ptrace;
@@ -925,6 +1139,24 @@ interface(`init_read_all_script_files',`
 	allow $1 init_script_file_type:file read_file_perms;
 ')
 
+#######################################
+## <summary>
+##	Dontaudit read all init script files.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to not audit.
+##	</summary>
+## </param>
+#
+interface(`init_dontaudit_read_all_script_files',`
+	gen_require(`
+		attribute init_script_file_type;
+	')
+
+	dontaudit $1 init_script_file_type:file read_file_perms;
+')
+
 ########################################
 ## <summary>
 ##	Execute all init scripts in the caller domain.
@@ -993,7 +1225,7 @@ interface(`init_use_script_fds',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1003,6 +1235,24 @@ interface(`init_dontaudit_use_script_fds',`
 	')
 
 	dontaudit $1 initrc_t:fd use;
+')
+
+########################################
+## <summary>
+##	Search init script keys.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`init_search_script_keys',`
+	gen_require(`
+		type initrc_t;
+	')
+
+	allow $1 initrc_t:key search;
 ')
 
 ########################################
@@ -1144,7 +1394,7 @@ interface(`init_rw_script_stream_sockets',`
 		type initrc_t;
 	')
 
-	allow $1 initrc_t:unix_stream_socket { read write };
+	allow $1 initrc_t:unix_stream_socket rw_socket_perms;
 ')
 
 ########################################
@@ -1154,7 +1404,7 @@ interface(`init_rw_script_stream_sockets',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1235,6 +1485,27 @@ interface(`init_use_script_ptys',`
 
 ########################################
 ## <summary>
+##	Read and write inherited init script ptys.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`init_use_inherited_script_ptys',`
+	gen_require(`
+		type initrc_devpts_t;
+	')
+
+	term_list_ptys($1)
+	allow $1 initrc_devpts_t:chr_file { getattr read write ioctl };
+
+	init_use_fds($1)
+')
+
+########################################
+## <summary>
 ##	Do not audit attempts to read and
 ##	write the init script pty.
 ## </summary>
@@ -1278,7 +1549,7 @@ interface(`init_getattr_script_status_files',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1289,6 +1560,25 @@ interface(`init_dontaudit_read_script_status_files',`
 
 	dontaudit $1 initrc_state_t:dir search_dir_perms;
 	dontaudit $1 initrc_state_t:file read_file_perms;
+')
+
+########################################
+## <summary>
+##	Read init script temporary data.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`init_read_script_tmp_files',`
+	gen_require(`
+		type initrc_tmp_t;
+	')
+
+	files_search_tmp($1)
+	read_files_pattern($1, initrc_tmp_t, initrc_tmp_t)
 ')
 
 ########################################
@@ -1330,6 +1620,11 @@ interface(`init_rw_script_tmp_files',`
 ##	The object class.
 ##	</summary>
 ## </param>
+## <param name="name" optional="true">
+##	<summary>
+##	The name of the object being created.
+##	</summary>
+## </param>
 #
 interface(`init_script_tmp_filetrans',`
 	gen_require(`
@@ -1337,7 +1632,7 @@ interface(`init_script_tmp_filetrans',`
 	')
 
 	files_search_tmp($1)
-	filetrans_pattern($1, initrc_tmp_t, $2, $3)
+	filetrans_pattern($1, initrc_tmp_t, $2, $3, $4)
 ')
 
 ########################################
@@ -1383,7 +1678,7 @@ interface(`init_read_utmp',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1416,12 +1711,12 @@ interface(`init_write_utmp',`
 
 ########################################
 ## <summary>
-##	Do not audit attempts to lock 
+##	Do not audit attempts to lock
 ##	init script pid files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1458,7 +1753,7 @@ interface(`init_rw_utmp',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -1467,7 +1762,7 @@ interface(`init_dontaudit_rw_utmp',`
 		type initrc_var_run_t;
 	')
 
-	dontaudit $1 initrc_var_run_t:file { getattr read write append };
+	dontaudit $1 initrc_var_run_t:file { getattr read write append lock };
 ')
 
 ########################################
@@ -1476,7 +1771,7 @@ interface(`init_dontaudit_rw_utmp',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain access allowed.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -1496,7 +1791,7 @@ interface(`init_manage_utmp',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain access allowed.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -1505,7 +1800,7 @@ interface(`init_pid_filetrans_utmp',`
 		type initrc_var_run_t;
 	')
 
-	files_pid_filetrans($1, initrc_var_run_t, file)
+	files_pid_filetrans($1, initrc_var_run_t, file, "utmp")
 ')
 
 ########################################

@@ -153,6 +153,8 @@ inherits file
 	search
 	rmdir
 	open
+	audit_access
+	execmod
 }
 
 class file
@@ -162,10 +164,16 @@ inherits file
 	entrypoint
 	execmod
 	open
+	audit_access
 }
 
 class lnk_file
 inherits file
+{
+	open
+	audit_access
+	execmod
+}
 
 class chr_file
 inherits file
@@ -174,24 +182,31 @@ inherits file
 	entrypoint
 	execmod
 	open
+	audit_access
 }
 
 class blk_file
 inherits file
 {
 	open
+	audit_access
+	execmod
 }
 
 class sock_file
 inherits file
 {
 	open
+	audit_access
+	execmod
 }
 
 class fifo_file
 inherits file
 {
 	open
+	audit_access
+	execmod
 }
 
 class fd
@@ -363,6 +378,7 @@ class security
 	setbool
 	setsecparam
 	setcheckreqprot
+	read_policy
 }
 
 
@@ -376,6 +392,7 @@ class system
 	syslog_read  
 	syslog_mod
 	syslog_console
+	module_request
 }
 
 #
@@ -427,6 +444,9 @@ class capability2
 {
 	mac_override	# unused by SELinux
 	mac_admin	# unused by SELinux
+	syslog
+	wake_alarm
+	block_suspend
 }
 
 #
@@ -743,7 +763,6 @@ inherits database
 class db_table
 inherits database
 {
-	use		# deprecated
 	select
 	update
 	insert
@@ -762,7 +781,6 @@ inherits database
 class db_column
 inherits database
 {
-	use		# deprecated
 	select
 	update
 	insert
@@ -772,7 +790,7 @@ class db_tuple
 {
 	relabelfrom
 	relabelto
-	use		# deprecated
+	use
 	select
 	update
 	insert
@@ -809,9 +827,41 @@ class kernel_service
 
 class tun_socket
 inherits socket
+{
+	attach_queue
+}
 
 class x_pointer
 inherits x_device
 
 class x_keyboard
 inherits x_device
+
+class db_schema
+inherits database
+{
+	search
+	add_name
+	remove_name
+}
+
+class db_view
+inherits database
+{
+	expand
+}
+
+class db_sequence
+inherits database
+{
+	get_value
+	next_value
+	set_value
+}
+
+class db_language
+inherits database
+{
+	implement
+	execute
+}

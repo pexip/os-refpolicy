@@ -32,6 +32,58 @@ interface(`auth_role',`
 
 ########################################
 ## <summary>
+##	Use PAM for authentication.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`auth_use_pam',`
+
+	# for SSP/ProPolice
+	dev_read_urand($1)
+	# for encrypted homedir
+	dev_read_sysfs($1)
+
+	auth_domtrans_chk_passwd($1)
+	auth_domtrans_upd_passwd($1)
+	auth_dontaudit_read_shadow($1)
+	auth_read_login_records($1)
+	auth_append_login_records($1)
+	auth_rw_lastlog($1)
+	auth_rw_faillog($1)
+	auth_exec_pam($1)
+	auth_use_nsswitch($1)
+
+	logging_send_audit_msgs($1)
+	logging_send_syslog_msg($1)
+
+	optional_policy(`
+		dbus_system_bus_client($1)
+
+		optional_policy(`
+			consolekit_dbus_chat($1)
+		')
+
+		optional_policy(`
+			fprintd_dbus_chat($1)
+		')
+	')
+
+	optional_policy(`
+		kerberos_manage_host_rcache($1)
+		kerberos_read_config($1)
+	')
+
+	optional_policy(`
+		nis_authenticate($1)
+	')
+')
+
+########################################
+## <summary>
 ##	Make the specified domain used for a login program.
 ## </summary>
 ## <param name="domain">
@@ -51,19 +103,26 @@ interface(`auth_login_pgm_domain',`
 	domain_obj_id_change_exemption($1)
 	role system_r types $1;
 
+	# Needed for pam_selinux_permit to cleanup properly
+	domain_read_all_domains_state($1)
+	domain_kill_all_domains($1)
+
+	# pam_keyring
+	allow $1 self:capability ipc_lock;
+	allow $1 self:process setkeycreate;
+	allow $1 self:key manage_key_perms;
+
 	files_list_var_lib($1)
 	manage_files_pattern($1, var_auth_t, var_auth_t)
-
-	# needed for afs - https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=253321
-	kernel_rw_afs_state($1)
 
 	manage_dirs_pattern($1, auth_cache_t, auth_cache_t)
 	manage_files_pattern($1, auth_cache_t, auth_cache_t)
 	manage_sock_files_pattern($1, auth_cache_t, auth_cache_t)
 	files_var_filetrans($1, auth_cache_t, dir)
 
-	# for SSP/ProPolice
-	dev_read_urand($1)
+	# needed for afs - https://bugzilla.redhat.com/bugzilla/show_bug.cgi?id=253321
+	kernel_rw_afs_state($1)
+
 	# for fingerprint readers
 	dev_rw_input_dev($1)
 	dev_rw_generic_usb_dev($1)
@@ -86,21 +145,12 @@ interface(`auth_login_pgm_domain',`
 	mls_process_set_level($1)
 	mls_fd_share_all_levels($1)
 
-	auth_domtrans_chk_passwd($1)
-	auth_domtrans_upd_passwd($1)
-	auth_dontaudit_read_shadow($1)
-	auth_read_login_records($1)
-	auth_append_login_records($1)
-	auth_rw_lastlog($1)
-	auth_rw_faillog($1)
-	auth_exec_pam($1)
-	auth_use_nsswitch($1)
+	auth_use_pam($1)
 
 	init_rw_utmp($1)
 
-	logging_send_audit_msgs($1)
-	logging_send_syslog_msg($1)
 	logging_set_loginuid($1)
+	logging_set_tty_audit($1)
 
 	seutil_read_config($1)
 	seutil_read_default_contexts($1)
@@ -116,7 +166,7 @@ interface(`auth_login_pgm_domain',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of process using the login program as entry point.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -130,11 +180,38 @@ interface(`auth_login_entry_type',`
 
 ########################################
 ## <summary>
+##	Make the specified type usable as a
+##	login file.
+## </summary>
+## <desc>
+##	<p>
+##	Make the specified type usable as a login file,
+##	This type has restricted modification capabilities when used with
+##	other interfaces that permit files_type access.
+##	The default type has properties similar to that of the shadow file.
+##	This will also make the type usable as a security file, making
+##	calls to files_security_file() redundant.
+##	</p>
+## </desc>
+## <param name="type">
+##	<summary>
+##	Type to be used as a login file.
+##	</summary>
+## </param>
+## <infoflow type="none"/>
+#
+interface(`auth_file',`
+	refpolicywarn(`$0($*) has been deprecated, use files_auth_file() instead.')
+	files_auth_file($1)
+')
+
+########################################
+## <summary>
 ##	Execute a login_program in the target domain.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="target_domain">
@@ -149,7 +226,7 @@ interface(`auth_domtrans_login_program',`
 	')
 
 	corecmd_search_bin($1)
-	domtrans_pattern($1, login_exec_t,$2)
+	domtrans_pattern($1, login_exec_t, $2)
 ')
 
 ########################################
@@ -159,7 +236,7 @@ interface(`auth_domtrans_login_program',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="target_domain">
@@ -178,7 +255,7 @@ interface(`auth_ranged_domtrans_login_program',`
 		type login_exec_t;
 	')
 
-	auth_domtrans_login_program($1,$2)
+	auth_domtrans_login_program($1, $2)
 
 	ifdef(`enable_mcs',`
 		range_transition $1 login_exec_t:process $3;
@@ -258,6 +335,7 @@ interface(`auth_manage_cache',`
 		type auth_cache_t;
 	')
 
+	manage_dirs_pattern($1, auth_cache_t, auth_cache_t)
 	manage_files_pattern($1, auth_cache_t, auth_cache_t)
 ')
 
@@ -285,7 +363,7 @@ interface(`auth_var_filetrans_cache',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -300,28 +378,24 @@ interface(`auth_domtrans_chk_passwd',`
 	corecmd_search_bin($1)
 	domtrans_pattern($1, chkpwd_exec_t, chkpwd_t)
 
-	dontaudit $1 shadow_t:file { getattr read };
+	dontaudit $1 shadow_t:file read_file_perms;
 
 	dev_read_rand($1)
 	dev_read_urand($1)
 
+	auth_use_nsswitch($1)
+	auth_rw_faillog($1)
+
 	logging_send_audit_msgs($1)
 
-	miscfiles_read_certs($1)
-
-	sysnet_dns_name_resolve($1)
-	sysnet_use_ldap($1)
+	miscfiles_read_generic_certs($1)
 
 	optional_policy(`
-		kerberos_use($1)
+		kerberos_read_keytab($1)
 	')
 
 	optional_policy(`
-		nis_use_ypbind($1)
-	')
-
-	optional_policy(`
-		pcscd_read_pub_files($1)
+		pcscd_read_pid_files($1)
 		pcscd_stream_connect($1)
 	')
 
@@ -332,11 +406,33 @@ interface(`auth_domtrans_chk_passwd',`
 
 ########################################
 ## <summary>
+##	Run unix_chkpwd to check a password.
+## 	Stripped down version to be called within boolean
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed to transition.
+##	</summary>
+## </param>
+#
+interface(`auth_domtrans_chkpwd',`
+	gen_require(`
+		type chkpwd_t, chkpwd_exec_t, shadow_t;
+	')
+
+	corecmd_search_bin($1)
+	domtrans_pattern($1, chkpwd_exec_t, chkpwd_t)
+	dontaudit $1 shadow_t:file { getattr read };
+	auth_domtrans_upd_passwd($1)
+')
+
+########################################
+## <summary>
 ##	Execute chkpwd programs in the chkpwd domain.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
@@ -380,7 +476,7 @@ interface(`auth_domtrans_upd_passwd',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
@@ -446,10 +542,10 @@ interface(`auth_dontaudit_getattr_shadow',`
 ##	</summary>
 ## </param>
 #
-# cjp: these next three interfaces are split 
+# cjp: these next three interfaces are split
 # since typeattribute does not work in conditionals
 # yet, otherwise they should be one interface.
-# 
+#
 interface(`auth_read_shadow',`
 	auth_can_read_shadow_passwords($1)
 	auth_tunable_read_shadow($1)
@@ -516,7 +612,7 @@ interface(`auth_tunable_read_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -628,7 +724,7 @@ interface(`auth_relabel_shadow',`
 	')
 
 	files_search_etc($1)
-	allow $1 shadow_t:file { relabelfrom relabelto };
+	allow $1 shadow_t:file relabel_file_perms;
 	typeattribute $1 can_relabelto_shadow_passwords;
 ')
 
@@ -734,7 +830,7 @@ interface(`auth_rw_lastlog',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -770,7 +866,7 @@ interface(`auth_signal_pam',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
@@ -804,6 +900,46 @@ interface(`auth_exec_pam',`
 	')
 
 	can_exec($1, pam_exec_t)
+')
+
+########################################
+## <summary>
+##	Read var auth files. Used by various other applications
+##	and pam applets etc.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`auth_read_var_auth',`
+	gen_require(`
+		type var_auth_t;
+	')
+
+	files_search_var($1)
+	read_files_pattern($1, var_auth_t, var_auth_t)
+')
+
+#######################################
+## <summary>
+##  Read and write var auth files. Used by various other applications
+##  and pam applets etc.
+## </summary>
+## <param name="domain">
+##  <summary>
+##  Domain allowed access.
+##  </summary>
+## </param>
+#
+interface(`auth_rw_var_auth',`
+    gen_require(`
+		type var_auth_t;
+    ')
+
+    files_search_var($1)
+    rw_files_pattern($1, var_auth_t, var_auth_t)
 ')
 
 ########################################
@@ -912,7 +1048,7 @@ interface(`auth_manage_pam_pid',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -962,6 +1098,43 @@ interface(`auth_list_pam_console_data',`
 
 	files_search_pids($1)
 	allow $1 pam_var_console_t:dir list_dir_perms;
+')
+
+########################################
+## <summary>
+##	Create pam var console pid directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`auth_create_pam_console_data_dirs',`
+	gen_require(`
+		type pam_var_console_t;
+	')
+
+	files_search_pids($1)
+	allow $1 pam_var_console_t:dir create_dir_perms;
+')
+
+########################################
+## <summary>
+##	Relabel pam_console data directories.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`auth_relabel_pam_console_data_dirs',`
+	gen_require(`
+		type pam_var_console_t;
+	')
+
+	relabel_dirs_pattern($1, pam_var_console_t, pam_var_console_t)
 ')
 
 ########################################
@@ -1027,12 +1200,65 @@ interface(`auth_delete_pam_console_data',`
 
 ########################################
 ## <summary>
+##	Create specified objects in
+##	pid directories with the pam var
+##      console pid file type using a
+##      file type transition.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="object_class">
+##	<summary>
+##	Class of the object being created.
+##	</summary>
+## </param>
+## <param name="name" optional="true">
+##	<summary>
+##	The name of the object being created.
+##	</summary>
+## </param>
+#
+interface(`auth_pid_filetrans_pam_var_console',`
+	gen_require(`
+		type pam_var_console_t;
+	')
+
+	files_pid_filetrans($1, pam_var_console_t, $2, $3)
+')
+
+########################################
+## <summary>
+##	Read all directories on the filesystem, except
+##	login files and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_read_all_dirs_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_list_non_auth_dirs() instead.')
+	files_list_non_auth_dirs($1)
+')
+
+########################################
+## <summary>
 ##	Read all directories on the filesystem, except
 ##	the shadow passwords and listed exceptions.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain perfoming this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <param name="exception_types" optional="true">
@@ -1043,11 +1269,31 @@ interface(`auth_delete_pam_console_data',`
 ## </param>
 #
 interface(`auth_read_all_dirs_except_shadow',`
-	gen_require(`
-		type shadow_t;
-	')
+	refpolicywarn(`$0($*) has been deprecated, use files_list_non_auth_dirs() instead.')
+	files_list_non_auth_dirs($1)
+')
 
-	files_read_all_dirs_except($1,$2 -shadow_t)
+########################################
+## <summary>
+##	Read all files on the filesystem, except
+##	login files and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`auth_read_all_files_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_read_non_auth_files() instead.')
+	files_read_non_auth_files($1)
 ')
 
 ########################################
@@ -1057,7 +1303,7 @@ interface(`auth_read_all_dirs_except_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain perfoming this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <param name="exception_types" optional="true">
@@ -1069,11 +1315,30 @@ interface(`auth_read_all_dirs_except_shadow',`
 ## <rolecap/>
 #
 interface(`auth_read_all_files_except_shadow',`
-	gen_require(`
-		type shadow_t;
-	')
+	refpolicywarn(`$0($*) has been deprecated, use files_read_non_auth_files() instead.')
+	files_read_non_auth_files($1)
+')
 
-	files_read_all_files_except($1,$2 -shadow_t)
+########################################
+## <summary>
+##	Read all symbolic links on the filesystem, except
+##	login files and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_read_all_symlinks_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_read_non_auth_symlinks() instead.')
+	files_read_non_auth_symlinks($1)
 ')
 
 ########################################
@@ -1083,7 +1348,7 @@ interface(`auth_read_all_files_except_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain perfoming this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <param name="exception_types" optional="true">
@@ -1094,11 +1359,30 @@ interface(`auth_read_all_files_except_shadow',`
 ## </param>
 #
 interface(`auth_read_all_symlinks_except_shadow',`
-	gen_require(`
-		type shadow_t;
-	')
+	refpolicywarn(`$0($*) has been deprecated, use files_read_non_auth_symlinks() instead.')
+	files_read_non_auth_symlinks($1)
+')
 
-	files_read_all_symlinks_except($1,$2 -shadow_t)
+#######################################
+## <summary>
+##	Relabel all files on the filesystem, except
+##	login files and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_relabel_all_files_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_relabel_non_auth_files() instead.')
+	files_relabel_non_auth_files($1)
 ')
 
 ########################################
@@ -1108,7 +1392,7 @@ interface(`auth_read_all_symlinks_except_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain perfoming this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <param name="exception_types" optional="true">
@@ -1118,13 +1402,75 @@ interface(`auth_read_all_symlinks_except_shadow',`
 ##	</summary>
 ## </param>
 #
-
 interface(`auth_relabel_all_files_except_shadow',`
-	gen_require(`
-		type shadow_t;
-	')
+	refpolicywarn(`$0($*) has been deprecated, use files_relabel_non_auth_files() instead.')
+	files_relabel_non_auth_files($1)
+')
 
-	files_relabel_all_files($1,$2 -shadow_t)
+########################################
+## <summary>
+##	Read and write all files on the filesystem, except
+##	login files and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_rw_all_files_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_rw_non_auth_files() instead.')
+	files_rw_non_auth_files($1)
+')
+
+########################################
+## <summary>
+##	Read and write all files on the filesystem, except
+##	the shadow passwords and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_rw_all_files_except_shadow',`
+	refpolicywarn(`$0($*) has been deprecated, use files_rw_non_auth_files() instead.')
+	files_rw_non_auth_files($1)
+')
+
+########################################
+## <summary>
+##	Manage all files on the filesystem, except
+##	login files passwords and listed exceptions.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="exception_types" optional="true">
+##	<summary>
+##	The types to be excluded.  Each type or attribute
+##	must be negated by the caller.
+##	</summary>
+## </param>
+#
+interface(`auth_manage_all_files_except_auth_files',`
+	refpolicywarn(`$0($*) has been deprecated, use files_manage_non_auth_files() instead.')
+	files_manage_non_auth_files($1)
 ')
 
 ########################################
@@ -1134,7 +1480,7 @@ interface(`auth_relabel_all_files_except_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the domain perfoming this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <param name="exception_types" optional="true">
@@ -1144,13 +1490,9 @@ interface(`auth_relabel_all_files_except_shadow',`
 ##	</summary>
 ## </param>
 #
-
 interface(`auth_manage_all_files_except_shadow',`
-	gen_require(`
-		type shadow_t;
-	')
-
-	files_manage_all_files($1,$2 -shadow_t)
+	refpolicywarn(`$0($*) has been deprecated, use files_manage_non_auth_files() instead.')
+	files_manage_non_auth_files($1)
 ')
 
 ########################################
@@ -1159,7 +1501,7 @@ interface(`auth_manage_all_files_except_shadow',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -1177,7 +1519,7 @@ interface(`auth_domtrans_utempter',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
@@ -1250,6 +1592,26 @@ interface(`auth_read_login_records',`
 
 	logging_search_logs($1)
 	allow $1 wtmp_t:file read_file_perms;
+')
+
+########################################
+## <summary>
+##	Do not audit attempts to read login records
+##	files (/var/log/wtmp).
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to not audit.
+##	</summary>
+## </param>
+## <rolecap/>
+#
+interface(`auth_dontaudit_read_login_records',`
+	gen_require(`
+		type wtmp_t;
+	')
+
+	dontaudit $1 wtmp_t:file read_file_perms;
 ')
 
 ########################################
@@ -1368,7 +1730,7 @@ interface(`auth_manage_login_records',`
 
 ########################################
 ## <summary>
-##	Use nsswitch to look up uid-username mappings.
+##	Relabel login record files.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -1376,36 +1738,40 @@ interface(`auth_manage_login_records',`
 ##	</summary>
 ## </param>
 #
+interface(`auth_relabel_login_records',`
+	gen_require(`
+		type wtmp_t;
+	')
+
+	allow $1 wtmp_t:file relabel_file_perms;
+')
+
+########################################
+## <summary>
+##	Use nsswitch to look up user, password, group, or
+##	host information.
+## </summary>
+## <desc>
+##	<p>
+##	Allow the specified domain to look up user, password,
+##	group, or host information using the name service.
+##	The most common use of this interface is for services
+##	that do host name resolution (usually DNS resolution).
+##	</p>
+## </desc>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <infoflow type="both" weight="10"/>
+#
 interface(`auth_use_nsswitch',`
+    gen_require(`
+        attribute nsswitch_domain;
+    ')
 
-	allow $1 self:netlink_route_socket r_netlink_socket_perms;
-
-	files_list_var_lib($1)
-
-	# read /etc/nsswitch.conf
-	files_read_etc_files($1)
-
-	miscfiles_read_certs($1)
-
-	sysnet_dns_name_resolve($1)
-	sysnet_use_ldap($1)
-
-	optional_policy(`
-		avahi_stream_connect($1)
-	')
-
-	optional_policy(`
-		nis_use_ypbind($1)
-	')
-
-	optional_policy(`
-		nscd_socket_use($1)
-	')
-
-	optional_policy(`
-		samba_stream_connect_winbind($1)
-		samba_read_var_files($1)
-	')
+	typeattribute $1 nsswitch_domain;
 ')
 
 ########################################

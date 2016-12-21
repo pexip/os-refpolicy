@@ -5,6 +5,34 @@
 
 ########################################
 ## <summary>
+##	Constrain by category access control (MCS).
+## </summary>
+## <desc>
+##	<p>
+##	Constrain the specified type by category based
+##	access control (MCS) This prevents this domain from
+##	interacting with subjects and operating on objects
+##	that it otherwise would be able to interact
+##	with or operate on respectively.
+##	</p>
+## </desc>
+## <param name="domain">
+##	<summary>
+##	Type to be constrained by MCS.
+##	</summary>
+## </param>
+## <infoflow type="none"/>
+#
+interface(`mcs_constrained',`
+	gen_require(`
+		attribute mcs_constrained_type;
+	')
+
+	typeattribute $1 mcs_constrained_type;
+')
+
+########################################
+## <summary>
 ##	This domain is allowed to read files and directories
 ##	regardless of their MCS category set.
 ## </summary>
@@ -102,53 +130,3 @@ interface(`mcs_process_set_categories',`
 
 	typeattribute $1 mcssetcats;
 ')
-
-########################################
-## <summary>
-##     Make specified domain MCS trusted
-##     for setting the low level of its range for the processes it executes,
-##      IE MCS will not be mandatory for it.
-## </summary>
-## <param name="domain">
-##     <summary>
-##     Domain target for user exemption.
-##     </summary>
-## </param>
-#
-interface(`mcs_process_set_low',`
-	gen_require(`
-		attribute mcssetlow;
-	')
-
-	typeattribute $1 mcssetlow;
-')
-
-########################################
-## <summary>
-##      Make specified object MCS trusted.
-## </summary>
-## <desc>
-##      <p>
-##      Make specified object MCS trusted.  This
-##      allows all levels to read and write the
-##      object.
-##      </p>
-##      <p>
-##      This currently only applies to filesystem
-##      objects, for example, files and directories.
-##      </p>
-## </desc>
-## <param name="domain">
-##      <summary>
-##      The type of the object.
-##      </summary>
-## </param>
-#
-interface(`mcs_trusted_object',`
-	gen_require(`
-		attribute mcstrustedobject;
-	')
-
-	typeattribute $1 mcstrustedobject;
-')
-

@@ -1,0 +1,3 @@
+debian/policygentool usr/bin
+usr/share/selinux/devel/include/
+usr/share/selinux/devel/Makefile

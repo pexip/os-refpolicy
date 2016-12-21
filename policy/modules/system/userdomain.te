@@ -1,5 +1,4 @@
-
-policy_module(userdomain, 4.3.0)
+policy_module(userdomain, 4.10.1)
 
 ########################################
 #
@@ -57,8 +56,7 @@ attribute userdomain;
 # unprivileged user domains
 attribute unpriv_userdomain;
 
-attribute untrusted_content_type;
-attribute untrusted_content_tmp_type;
+attribute user_home_content_type;
 
 type user_home_dir_t alias { staff_home_dir_t sysadm_home_dir_t secadm_home_dir_t auditadm_home_dir_t unconfined_home_dir_t };
 fs_associate_tmpfs(user_home_dir_t)
@@ -75,10 +73,8 @@ typealias user_home_t alias { staff_untrusted_content_t sysadm_untrusted_content
 userdom_user_home_content(user_home_t)
 fs_associate_tmpfs(user_home_t)
 files_associate_tmp(user_home_t)
-files_poly_member(user_home_t)
 files_poly_parent(user_home_t)
 files_mountpoint(user_home_t)
-ubac_constrained(user_home_t)
 
 type user_devpts_t alias { staff_devpts_t sysadm_devpts_t secadm_devpts_t auditadm_devpts_t unconfined_devpts_t };
 dev_node(user_devpts_t)
