@@ -28,7 +28,7 @@ Index: refpolicy/policy/modules/contrib/mon.te
 ===================================================================
 --- /dev/null
 +++ refpolicy/policy/modules/contrib/mon.te
-@@ -0,0 +1,187 @@
+@@ -0,0 +1,208 @@
 +policy_module(mon, 1.12.0)
 +
 +########################################
@@ -103,6 +103,7 @@ Index: refpolicy/policy/modules/contrib/mon.te
 +
 +corecmd_exec_bin(mon_t)
 +dev_read_urand(mon_t)
++dev_read_sysfs(mon_t)
 +logging_search_logs(mon_t)
 +manage_files_pattern(mon_t, mon_var_log_t, mon_var_log_t)
 +
@@ -148,12 +149,14 @@ Index: refpolicy/policy/modules/contrib/mon.te
 +allow mon_net_test_t self:fifo_file rw_file_perms;
 +corecmd_exec_bin(mon_net_test_t)
 +miscfiles_read_localization(mon_net_test_t)
++miscfiles_read_certs(mon_net_test_t)
 +files_read_usr_files(mon_net_test_t)
 +fs_getattr_xattr_fs(mon_net_test_t)
 +sysnet_read_config(mon_net_test_t)
 +auth_use_nsswitch(mon_net_test_t)
 +dev_read_urand(mon_net_test_t)
 +corenet_tcp_connect_all_ports(mon_net_test_t)
++corenet_udp_bind_generic_node(mon_net_test_t)
 +dev_dontaudit_getattr_all_chr_files(mon_net_test_t)
 +kernel_dontaudit_getattr_core_if(mon_net_test_t)
 +corecmd_exec_shell(mon_net_test_t)
@@ -183,8 +186,12 @@ Index: refpolicy/policy/modules/contrib/mon.te
 +allow mon_local_test_t self:fifo_file rw_file_perms;
 +corecmd_exec_bin(mon_local_test_t)
 +miscfiles_read_localization(mon_local_test_t)
++application_exec_all(mon_local_test_t)
 +files_read_usr_files(mon_local_test_t)
++files_search_spool(mon_local_test_t)
++files_search_mnt(mon_local_test_t)
 +fs_getattr_xattr_fs(mon_local_test_t)
++fs_search_auto_mountpoints(mon_local_test_t)
 +sysnet_read_config(mon_local_test_t)
 +auth_use_nsswitch(mon_local_test_t)
 +dev_read_urand(mon_local_test_t)
@@ -205,8 +212,14 @@ Index: refpolicy/policy/modules/contrib/mon.te
 +term_list_ptys(mon_local_test_t)
 +term_getattr_generic_ptys(mon_local_test_t)
 +fs_list_tmpfs(mon_local_test_t)
++files_dontaudit_getattr_tmpfs_file(mon_local_test_t)
 +logging_send_syslog_msg(mon_local_test_t)
 +getattr_init_fifo(mon_local_test_t)
++rpc_read_nfs_content(mon_local_test_t)
++
++optional_policy(`
++	files_list_boot(mon_local_test_t)
++')
 +
 +optional_policy(`
 +	sudo_role_template(system, system_r, mon_local_test_t)
@@ -216,11 +229,19 @@ Index: refpolicy/policy/modules/contrib/mon.te
 +optional_policy(`
 +	gpm_getattr_gpmctl(mon_local_test_t)
 +')
++
++optional_policy(`
++	postfix_search_spool(mon_local_test_t)
++')
++
++optional_policy(`
++	xserver_rw_console(mon_local_test_t)
++')
 Index: refpolicy/policy/modules/kernel/corenetwork.te.in
 ===================================================================
 --- refpolicy.orig/policy/modules/kernel/corenetwork.te.in
 +++ refpolicy/policy/modules/kernel/corenetwork.te.in
-@@ -174,6 +174,7 @@ network_port(matahari, tcp,49000,s0, udp
+@@ -176,6 +176,7 @@ network_port(matahari, tcp,49000,s0, udp
  network_port(memcache, tcp,11211,s0, udp,11211,s0)
  network_port(milter) # no defined portcon
  network_port(mmcc, tcp,5050,s0, udp,5050,s0)
@@ -232,9 +253,9 @@ Index: refpolicy/policy/modules/system/init.if
 ===================================================================
 --- refpolicy.orig/policy/modules/system/init.if
 +++ refpolicy/policy/modules/system/init.if
-@@ -2636,3 +2636,22 @@ interface(`rename_unlink_init_var_run',`
- 
- 	allow $1 init_var_run_t:file { rename getattr unlink };
+@@ -3318,3 +3318,22 @@ interface(`read_initrc_files',`
+ 	allow $1 initrc_t:dir search;
+ 	allow $1 initrc_t:file read_file_perms;
  ')
 +
 +########################################
@@ -255,3 +276,15 @@ Index: refpolicy/policy/modules/system/init.if
 +	allow $1 init_var_run_t:fifo_file getattr;
 +	allow $1 init_var_run_t:dir list_dir_perms;
 +')
+Index: refpolicy/policy/modules/contrib/gpm.if
+===================================================================
+--- refpolicy.orig/policy/modules/contrib/gpm.if
++++ refpolicy/policy/modules/contrib/gpm.if
+@@ -38,6 +38,7 @@ interface(`gpm_getattr_gpmctl',`
+ 
+ 	dev_list_all_dev_nodes($1)
+ 	allow $1 gpmctl_t:sock_file getattr_sock_file_perms;
++	allow $1 gpmctl_t:fifo_file getattr_fifo_file_perms;
+ ')
+ 
+ ########################################

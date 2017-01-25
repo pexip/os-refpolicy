@@ -997,7 +997,7 @@ guest = module
 #
 # Software for reliable, scalable, distributed computing.
 # 
-hadoop = module
+hadoop = off
 
 # Layer: contrib
 # Module: hal
@@ -1383,6 +1383,13 @@ mojomojo = module
 # mon network monitoring daemon
 # 
 mon = module
+
+# Layer: contrib
+# Module: monit
+#
+# monit monitoring daemon that restarts services
+# 
+monit = module
 
 # Layer: contrib
 # Module: mongodb
@@ -2726,7 +2733,7 @@ staff = module
 #
 # General system administration role
 # 
-sysadm = module
+sysadm = base
 
 # Layer: roles
 # Module: unprivuser
@@ -2839,7 +2846,7 @@ libraries = base
 #
 # Policy for local logins.
 # 
-locallogin = module
+locallogin = base
 
 # Layer: system
 # Module: logging
@@ -2867,7 +2874,7 @@ miscfiles = base
 #
 # Policy for kernel module utilities
 # 
-modutils = module
+modutils = base
 
 # Layer: system
 # Module: mount
@@ -2909,7 +2916,7 @@ sysnetwork = base
 #
 # Policy for udev.
 # 
-udev = module
+udev = base
 
 # Layer: system
 # Module: unconfined

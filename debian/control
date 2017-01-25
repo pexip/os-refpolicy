@@ -1,23 +1,37 @@
 Source: refpolicy
-VCS-Git: git://anonscm.debian.org/selinux/refpolicy.git
-VCS-Browser: http://anonscm.debian.org/gitweb/?p=selinux/refpolicy.git;a=summary
+VCS-Git: https://anonscm.debian.org/git/selinux/refpolicy.git
+VCS-Browser: https://anonscm.debian.org/gitweb/?p=selinux/refpolicy.git;a=summary
 Priority: optional
 Section: admin
-Homepage: http://oss.tresys.com/projects/refpolicy/wiki/DownloadRelease
+Homepage: https://github.com/TresysTechnology/refpolicy/wiki
 Maintainer: Debian SELinux maintainers <selinux-devel@lists.alioth.debian.org>
 Uploaders: Russell Coker <russell@coker.com.au>
-Standards-Version: 3.9.5
+Standards-Version: 3.9.8
 Build-Depends: debhelper (>= 9)
-Build-Depends-Indep: policycoreutils (>= 2.2.1), checkpolicy (>= 2.2),
-                     python, m4, bzip2, gawk, libsepol1 (>= 2.2)
+Build-Depends-Indep: bzip2,
+                     checkpolicy (>= 2.5),
+                     gawk,
+                     libsepol1 (>= 2.5),
+                     m4,
+                     policycoreutils (>= 2.5),
+                     policycoreutils-python-utils (>= 2.5),
+                     python,
+# Needed for the --sort=name option, can probably be removed when this version
+# hits stable.
+                     tar (>= 1.28)
 
 Package: selinux-policy-default
 Architecture: all
-Depends: ${misc:Depends}, policycoreutils (>= 2.2.1), libpam-modules (>= 0.77-0.se5),
-          python, libselinux1 (>= 2.2), libsepol1 (>= 2.2), selinux-utils (>= 2.2.1)
+Depends: libselinux1 (>= 2.5),
+         libsemanage1 (>= 2.5),
+         libsepol1 (>= 2.5),
+         policycoreutils (>= 2.5),
+         selinux-utils (>= 2.5),
+         ${misc:Depends}
 Recommends: checkpolicy, setools
 Suggests: logcheck, syslog-summary
 Breaks: selinux-basics (<< 0.5.2~)
+Conflicts: mcstrans
 Description: Strict and Targeted variants of the SELinux policy
  This is the reference policy for SE Linux.  In the default configuration it
  will provide the functionality previously known as the "targeted" policy.  If
@@ -29,11 +43,16 @@ Description: Strict and Targeted variants of the SELinux policy
 Package: selinux-policy-mls
 Architecture: all
 Priority: extra
-Depends: ${misc:Depends}, policycoreutils (>= 2.2.1), libpam-modules (>= 0.77-0.se5),
-          python, libselinux1 (>= 2.2), libsepol1 (>= 2.2), selinux-utils (>= 2.2.1)
+Depends: libselinux1 (>= 2.4),
+         libsemanage1 (>= 2.4),
+         libsepol1 (>= 2.4),
+         policycoreutils (>= 2.4),
+         selinux-utils (>= 2.4),
+         ${misc:Depends}
 Recommends: checkpolicy, setools
 Suggests: logcheck, syslog-summary
 Breaks: selinux-basics (<< 0.5.2~)
+Conflicts: mcstrans
 Description: MLS (Multi Level Security) variant of the SELinux policy
  This is the reference policy for SE Linux built with MLS support.  It allows
  giving data labels such as "Top Secret" and preventing such data from leaking
@@ -45,8 +64,14 @@ Description: MLS (Multi Level Security) variant of the SELinux policy
 
 Package: selinux-policy-src
 Architecture: all
-Depends: ${misc:Depends}, python, policycoreutils (>= 2.2.1), checkpolicy (>= 2.2), gawk
-Recommends: setools
+Depends: checkpolicy (>= 2.4),
+         gawk,
+         make,
+         policycoreutils (>= 2.4),
+         policycoreutils-python-utils (>= 2.4),
+         python,
+         ${misc:Depends}
+Recommends: policycoreutils-dev (>= 2.4), setools
 Suggests: logcheck, syslog-summary
 Description: Source of the SELinux reference policy for customization
  The SELinux Reference Policy (refpolicy) is a complete SELinux
@@ -71,8 +96,16 @@ Description: Source of the SELinux reference policy for customization
 
 Package: selinux-policy-dev
 Architecture: all
-Depends: ${misc:Depends}, python, policycoreutils (>= 2.2.1), checkpolicy (>= 2.2),
-         gawk, make, m4, selinux-utils (>= 2.2)
+Depends: checkpolicy (>= 2.4),
+         gawk,
+         m4,
+         make,
+         policycoreutils (>= 2.4),
+         policycoreutils-dev (>= 2.4),
+         policycoreutils-python-utils (>= 2.4),
+         python,
+         selinux-utils (>= 2.4),
+         ${misc:Depends}
 Recommends: setools
 Description: Headers from the SELinux reference policy for building modules
  The SELinux Reference Policy (refpolicy) is a complete SELinux
@@ -99,7 +132,7 @@ Package: selinux-policy-doc
 Architecture: all
 Section: doc
 Depends: ${misc:Depends}
-Recommends: make, gcc
+Recommends: gcc, make
 Conflicts: selinux-policy-refpolicy-doc
 Description: Documentation for the SELinux reference policy
  The SELinux Reference Policy (refpolicy) is a complete SELinux
