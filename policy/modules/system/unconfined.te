@@ -1,5 +1,4 @@
-
-policy_module(unconfined, 3.1.0)
+policy_module(unconfined, 3.6.0)
 
 ########################################
 #
@@ -34,8 +33,6 @@ files_create_boot_flag(unconfined_t)
 mcs_killall(unconfined_t)
 mcs_ptrace_all(unconfined_t)
 
-init_run_daemon(unconfined_t, unconfined_r)
-
 libs_run_ldconfig(unconfined_t, unconfined_r)
 
 logging_send_syslog_msg(unconfined_t)
@@ -50,9 +47,15 @@ unconfined_domain(unconfined_t)
 
 userdom_user_home_dir_filetrans_user_home_content(unconfined_t, { dir file lnk_file fifo_file sock_file })
 
-ifdef(`distro_gentoo',`
-	seutil_run_runinit(unconfined_t, unconfined_r)
-	seutil_init_script_run_runinit(unconfined_t, unconfined_r)
+ifdef(`direct_sysadm_daemon',`
+        optional_policy(`
+                init_run_daemon(unconfined_t, unconfined_r)
+        ')
+',`
+        ifdef(`distro_gentoo',`
+                seutil_run_runinit(unconfined_t, unconfined_r)
+                seutil_init_script_run_runinit(unconfined_t, unconfined_r)
+        ')
 ')
 
 optional_policy(`
@@ -77,37 +80,7 @@ optional_policy(`
 ')
 
 optional_policy(`
-	init_dbus_chat_script(unconfined_t)
-
-	dbus_stub(unconfined_t)
-
-	optional_policy(`
-		avahi_dbus_chat(unconfined_t)
-	')
-
-	optional_policy(`
-		bluetooth_dbus_chat(unconfined_t)
-	')
-
-	optional_policy(`
-		consolekit_dbus_chat(unconfined_t)
-	')
-
-	optional_policy(`
-		cups_dbus_chat_config(unconfined_t)
-	')
-
-	optional_policy(`
-		hal_dbus_chat(unconfined_t)
-	')
-
-	optional_policy(`
-		networkmanager_dbus_chat(unconfined_t)
-	')
-
-	optional_policy(`
-		oddjob_dbus_chat(unconfined_t)
-	')
+	dpkg_run(unconfined_t, unconfined_r)
 ')
 
 optional_policy(`
@@ -116,6 +89,10 @@ optional_policy(`
 
 optional_policy(`
 	ftp_run_ftpdctl(unconfined_t, unconfined_r)
+')
+
+optional_policy(`
+	hadoop_role(unconfined_r, unconfined_t)
 ')
 
 optional_policy(`
@@ -147,6 +124,12 @@ optional_policy(`
 ')
 
 optional_policy(`
+	portage_run(unconfined_t, unconfined_r)
+	portage_run_fetch(unconfined_t, unconfined_r)
+	portage_run_gcc_config(unconfined_t, unconfined_r)
+')
+
+optional_policy(`
 	prelink_run(unconfined_t, unconfined_r)
 ')
 
@@ -167,6 +150,10 @@ optional_policy(`
 optional_policy(`
 	# cjp: this should probably be removed:
 	rpc_domtrans_nfsd(unconfined_t)
+')
+
+optional_policy(`
+	rtkit_scheduled(unconfined_t)
 ')
 
 optional_policy(`
@@ -192,6 +179,10 @@ optional_policy(`
 ')
 
 optional_policy(`
+	unconfined_dbus_chat(unconfined_t)
+')
+
+optional_policy(`
 	usermanage_run_admin_passwd(unconfined_t, unconfined_r)
 ')
 
@@ -207,10 +198,6 @@ optional_policy(`
 	wine_domtrans(unconfined_t)
 ')
 
-optional_policy(`
-	xserver_domtrans(unconfined_t)
-')
-
 ########################################
 #
 # Unconfined Execmem Local policy
@@ -220,12 +207,5 @@ allow unconfined_execmem_t self:process { execstack execmem };
 unconfined_domain_noaudit(unconfined_execmem_t)
 
 optional_policy(`
-	dbus_stub(unconfined_execmem_t)
-
-	init_dbus_chat_script(unconfined_execmem_t)
 	unconfined_dbus_chat(unconfined_execmem_t)
-
-	optional_policy(`
-		hal_dbus_chat(unconfined_execmem_t)
-	')
 ')

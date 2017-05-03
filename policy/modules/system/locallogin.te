@@ -1,5 +1,4 @@
-
-policy_module(locallogin, 1.10.0)
+policy_module(locallogin, 1.13.0)
 
 ########################################
 #
@@ -112,11 +111,11 @@ storage_dontaudit_setattr_fixed_disk_dev(local_login_t)
 storage_dontaudit_getattr_removable_dev(local_login_t)
 storage_dontaudit_setattr_removable_dev(local_login_t)
 
-term_use_all_user_ttys(local_login_t)
+term_use_all_ttys(local_login_t)
 term_use_unallocated_ttys(local_login_t)
 term_relabel_unallocated_ttys(local_login_t)
-term_relabel_all_user_ttys(local_login_t)
-term_setattr_all_user_ttys(local_login_t)
+term_relabel_all_ttys(local_login_t)
+term_setattr_all_ttys(local_login_t)
 term_setattr_unallocated_ttys(local_login_t)
 
 auth_rw_login_records(local_login_t)
@@ -140,6 +139,11 @@ ifdef(`distro_ubuntu',`
 	optional_policy(`
 		unconfined_domain(local_login_t)
 	')
+')
+
+tunable_policy(`console_login',`
+	# Able to relabel /dev/console to user tty types.
+	term_relabel_console(local_login_t)
 ')
 
 tunable_policy(`use_nfs_home_dirs',`
@@ -177,11 +181,11 @@ optional_policy(`
 ')
 
 optional_policy(`
-	nscd_socket_use(local_login_t)
+	nscd_use(local_login_t)
 ')
 
 optional_policy(`
-	unconfined_domain(local_login_t)
+	unconfined_shell_domtrans(local_login_t)
 ')
 
 optional_policy(`
@@ -194,13 +198,14 @@ optional_policy(`
 ')
 
 #################################
-# 
+#
 # Sulogin local policy
 #
 
+allow sulogin_t self:capability dac_override;
 allow sulogin_t self:process ~{ ptrace setcurrent setexec setfscreate setrlimit execmem execstack execheap };
 allow sulogin_t self:fd use;
-allow sulogin_t self:fifo_file rw_file_perms;
+allow sulogin_t self:fifo_file rw_fifo_file_perms;
 allow sulogin_t self:unix_dgram_socket create_socket_perms;
 allow sulogin_t self:unix_stream_socket create_stream_socket_perms;
 allow sulogin_t self:unix_dgram_socket sendto;
@@ -211,13 +216,13 @@ allow sulogin_t self:msgq create_msgq_perms;
 allow sulogin_t self:msg { send receive };
 
 kernel_read_system_state(sulogin_t)
+# because file systems are not mounted:
+kernel_dontaudit_search_unlabeled(sulogin_t)
 
 fs_search_auto_mountpoints(sulogin_t)
 fs_rw_tmpfs_chr_files(sulogin_t)
 
 files_read_etc_files(sulogin_t)
-# because file systems are not mounted:
-files_dontaudit_search_isid_type_dirs(sulogin_t)
 
 auth_read_shadow(sulogin_t)
 
@@ -257,5 +262,5 @@ optional_policy(`
 ')
 
 optional_policy(`
-	nscd_socket_use(sulogin_t)
+	nscd_use(sulogin_t)
 ')

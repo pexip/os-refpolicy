@@ -1,5 +1,4 @@
-
-policy_module(getty, 1.7.0)
+policy_module(getty, 1.10.0)
 
 ########################################
 #
@@ -56,11 +55,11 @@ files_tmp_filetrans(getty_t, getty_tmp_t, { file dir })
 manage_files_pattern(getty_t, getty_var_run_t, getty_var_run_t)
 files_pid_filetrans(getty_t, getty_var_run_t, file)
 
-kernel_list_proc(getty_t)
-kernel_read_proc_symlinks(getty_t)
+kernel_read_system_state(getty_t)
 
-corecmd_search_bin(getty_t)
-corecmd_read_bin_symlinks(getty_t)
+# these two needed for receiving faxes
+corecmd_exec_bin(getty_t)
+corecmd_exec_shell(getty_t)
 
 dev_read_sysfs(getty_t)
 
@@ -79,12 +78,11 @@ mls_file_read_all_levels(getty_t)
 mls_file_write_all_levels(getty_t)
 
 # Chown, chmod, read and write ttys.
-term_use_all_user_ttys(getty_t)
+term_use_all_ttys(getty_t)
 term_use_unallocated_ttys(getty_t)
-term_setattr_all_user_ttys(getty_t)
+term_setattr_all_ttys(getty_t)
 term_setattr_unallocated_ttys(getty_t)
 term_setattr_console(getty_t)
-term_dontaudit_use_console(getty_t)
 
 auth_rw_login_records(getty_t)
 
@@ -115,12 +113,19 @@ ifdef(`distro_ubuntu',`
 	')
 ')
 
+tunable_policy(`console_login',`
+	# Support logging in from /dev/console
+	term_use_console(getty_t)
+',`
+	term_dontaudit_use_console(getty_t)
+')
+
 optional_policy(`
 	mta_send_mail(getty_t)
 ')
 
 optional_policy(`
-	nscd_socket_use(getty_t)
+	nscd_use(getty_t)
 ')
 
 optional_policy(`

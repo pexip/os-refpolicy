@@ -1,5 +1,23 @@
 ## <summary>Policy for kernel module utilities</summary>
 
+######################################
+## <summary>
+##	Getattr the dependencies of kernel modules.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`modutils_getattr_module_deps',`
+	gen_require(`
+		type modules_dep_t;
+	')
+
+	getattr_files_pattern($1, modules_object_t, modules_dep_t)
+')
+
 ########################################
 ## <summary>
 ##	Read the dependencies of kernel modules.
@@ -41,6 +59,7 @@ interface(`modutils_read_module_config',`
 	files_search_etc($1)
 	files_search_boot($1)
 
+	allow $1 modules_conf_t:dir list_dir_perms;
 	allow $1 modules_conf_t:file read_file_perms;
 	allow $1 modules_conf_t:lnk_file read_lnk_file_perms;
 ')
@@ -61,7 +80,7 @@ interface(`modutils_rename_module_config',`
 		type modules_conf_t;
 	')
 
-	allow $1 modules_conf_t:file rename_file_perms;
+	rename_files_pattern($1, modules_conf_t, modules_conf_t)
 ')
 
 ########################################
@@ -80,7 +99,26 @@ interface(`modutils_delete_module_config',`
 		type modules_conf_t;
 	')
 
-	allow $1 modules_conf_t:file unlink;
+	delete_files_pattern($1, modules_conf_t, modules_conf_t)
+')
+
+########################################
+## <summary>
+##	Manage files with the configuration options used when
+##	loading modules.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`modutils_manage_module_config',`
+	gen_require(`
+		type modules_conf_t;
+	')
+
+	manage_files_pattern($1, modules_conf_t, modules_conf_t)
 ')
 
 ########################################
@@ -89,7 +127,7 @@ interface(`modutils_delete_module_config',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -110,18 +148,17 @@ interface(`modutils_domtrans_insmod_uncond',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
 interface(`modutils_domtrans_insmod',`
 	gen_require(`
-		bool secure_mode_insmod;
+		type insmod_t, insmod_exec_t;
 	')
 
-	if (!secure_mode_insmod) {
-		modutils_domtrans_insmod_uncond($1)
-	}
+	corecmd_search_bin($1)
+	domtrans_pattern($1, insmod_exec_t, insmod_t)
 ')
 
 ########################################
@@ -133,12 +170,12 @@ interface(`modutils_domtrans_insmod',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the insmod domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -177,7 +214,7 @@ interface(`modutils_exec_insmod',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -196,12 +233,12 @@ interface(`modutils_domtrans_depmod',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the depmod domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -240,7 +277,7 @@ interface(`modutils_exec_depmod',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -259,25 +296,23 @@ interface(`modutils_domtrans_update_mods',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the update_modules domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
 #
 interface(`modutils_run_update_mods',`
 	gen_require(`
-		type update_modules_t;
+		attribute_role update_modules_roles;
 	')
 
 	modutils_domtrans_update_mods($1)
-	role $2 types update_modules_t;
-
-	modutils_run_insmod(update_modules_t, $2)
+	roleattribute $2 update_modules_roles;
 ')
 
 ########################################

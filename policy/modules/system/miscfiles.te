@@ -1,16 +1,17 @@
-
-policy_module(miscfiles, 1.7.0)
+policy_module(miscfiles, 1.11.2)
 
 ########################################
 #
 # Declarations
 #
 
+attribute cert_type;
+
 #
 # cert_t is the type of files in the system certs directories.
 #
 type cert_t;
-files_type(cert_t)
+miscfiles_cert_type(cert_t)
 
 #
 # fonts_t is the type of various font
@@ -18,6 +19,9 @@ files_type(cert_t)
 #
 type fonts_t;
 files_type(fonts_t)
+
+type fonts_cache_t;
+files_type(fonts_cache_t)
 
 #
 # type for /usr/share/hwdata
@@ -36,6 +40,9 @@ files_type(locale_t)
 #
 type man_t alias catman_t;
 files_type(man_t)
+
+type man_cache_t;
+files_type(man_cache_t)
 
 #
 # Types for public content

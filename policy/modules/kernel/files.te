@@ -1,5 +1,4 @@
-
-policy_module(files, 1.12.0)
+policy_module(files, 1.19.0)
 
 ########################################
 #
@@ -30,6 +29,12 @@ attribute security_file_type;
 # and its opposite
 attribute non_security_file_type;
 
+# sensitive authentication files whose accesses should
+# not be dontaudited for uses
+attribute auth_file_type;
+# and its opposite
+attribute non_auth_file_type;
+
 attribute tmpfile;
 attribute tmpfsfile;
 
@@ -53,7 +58,7 @@ files_mountpoint(default_t)
 #
 # etc_t is the type of the system etc directories.
 #
-type etc_t;
+type etc_t, configfile;
 files_type(etc_t)
 # compatibility aliases for removed types:
 typealias etc_t alias automount_etc_t;
@@ -68,16 +73,6 @@ type etc_runtime_t;
 files_type(etc_runtime_t)
 #Temporarily in policy until FC5 dissappears
 typealias etc_runtime_t alias firstboot_rw_t;
-
-#
-# file_t is the default type of a file that has not yet been
-# assigned an extended attribute (EA) value (when using a filesystem
-# that supports EAs).
-#
-type file_t;
-files_mountpoint(file_t)
-kernel_rootfs_mountpoint(file_t)
-sid file gen_context(system_u:object_r:file_t,s0)
 
 #
 # home_root_t is the type for the directory where user home directories
@@ -168,6 +163,7 @@ files_mountpoint(var_lib_t)
 #
 type var_lock_t;
 files_lock_file(var_lock_t)
+files_mountpoint(var_lock_t)
 
 #
 # var_run_t is the type of /var/run, usually
@@ -194,6 +190,7 @@ fs_associate(file_type)
 fs_associate_noxattr(file_type)
 fs_associate_tmpfs(file_type)
 fs_associate_ramfs(file_type)
+fs_associate_hugetlbfs(file_type)
 
 ########################################
 #
@@ -220,7 +217,7 @@ fs_associate_tmpfs(tmpfsfile)
 allow files_unconfined_type file_type:{ file chr_file } ~execmod;
 allow files_unconfined_type file_type:{ dir lnk_file sock_file fifo_file blk_file } *;
 
-# Mount/unmount any filesystem with the context= option. 
+# Mount/unmount any filesystem with the context= option.
 allow files_unconfined_type file_type:filesystem *;
 
 tunable_policy(`allow_execmod',`

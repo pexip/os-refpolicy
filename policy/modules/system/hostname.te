@@ -1,5 +1,4 @@
-
-policy_module(hostname, 1.6.0)
+policy_module(hostname, 1.9.0)
 
 ########################################
 #
@@ -24,23 +23,25 @@ dontaudit hostname_t self:capability sys_tty_config;
 
 kernel_list_proc(hostname_t)
 kernel_read_proc_symlinks(hostname_t)
+# for when /usr is not mounted:
+kernel_dontaudit_search_unlabeled(hostname_t)
 
 dev_read_sysfs(hostname_t)
+# Early devtmpfs, before udev relabel
+dev_dontaudit_rw_generic_chr_files(hostname_t)
 
 domain_use_interactive_fds(hostname_t)
 
 files_read_etc_files(hostname_t)
 files_dontaudit_search_var(hostname_t)
-# for when /usr is not mounted:
-files_dontaudit_search_isid_type_dirs(hostname_t)
 
 fs_getattr_xattr_fs(hostname_t)
 fs_search_auto_mountpoints(hostname_t)
 fs_dontaudit_use_tmpfs_chr_dev(hostname_t)
 
 term_dontaudit_use_console(hostname_t)
-term_use_all_user_ttys(hostname_t)
-term_use_all_user_ptys(hostname_t)
+term_use_all_ttys(hostname_t)
+term_use_all_ptys(hostname_t)
 
 init_use_fds(hostname_t)
 init_use_script_fds(hostname_t)
@@ -50,8 +51,18 @@ logging_send_syslog_msg(hostname_t)
 
 miscfiles_read_localization(hostname_t)
 
+sysnet_dontaudit_rw_dhcpc_udp_sockets(hostname_t)
+sysnet_dontaudit_rw_dhcpc_unix_stream_sockets(hostname_t)
 sysnet_read_config(hostname_t)
 sysnet_dns_name_resolve(hostname_t)
+
+ifdef(`distro_debian',`
+	term_dontaudit_use_unallocated_ttys(hostname_t)
+')
+
+optional_policy(`
+	nis_use_ypbind(hostname_t)
+')
 
 optional_policy(`
 	xen_append_log(hostname_t)

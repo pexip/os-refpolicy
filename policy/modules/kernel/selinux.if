@@ -63,6 +63,10 @@ interface(`selinux_get_fs_mount',`
 	# (/selinux) is already a selinuxfs
 	allow $1 security_t:filesystem getattr;
 
+	# Same for /sys/fs/selinux
+	dev_getattr_sysfs($1)
+	dev_search_sysfs($1)
+
 	# read /proc/filesystems to see if selinuxfs is supported
 	# then read /proc/self/mount to see where selinuxfs is mounted
 	kernel_read_system_state($1)
@@ -89,9 +93,68 @@ interface(`selinux_dontaudit_get_fs_mount',`
 	# (/selinux) is already a selinuxfs
 	dontaudit $1 security_t:filesystem getattr;
 
+	# Same for /sys/fs/selinux
+	dev_dontaudit_getattr_sysfs($1)
+	dev_dontaudit_search_sysfs($1)
+
 	# read /proc/filesystems to see if selinuxfs is supported
 	# then read /proc/self/mount to see where selinuxfs is mounted
 	kernel_dontaudit_read_system_state($1)
+')
+
+########################################
+## <summary>
+##	Mount the selinuxfs filesystem.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`selinux_mount_fs',`
+	gen_require(`
+		type security_t;
+	')
+
+	allow $1 security_t:filesystem mount;
+')
+
+########################################
+## <summary>
+##	Remount the selinuxfs filesystem.
+##	This allows some mount options to be changed.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`selinux_remount_fs',`
+	gen_require(`
+		type security_t;
+	')
+
+	allow $1 security_t:filesystem remount;
+')
+
+########################################
+## <summary>
+##	Unmount the selinuxfs filesystem.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`selinux_unmount_fs',`
+	gen_require(`
+		type security_t;
+	')
+
+	allow $1 security_t:filesystem unmount;
 ')
 
 ########################################
@@ -110,6 +173,9 @@ interface(`selinux_getattr_fs',`
 	')
 
 	allow $1 security_t:filesystem getattr;
+
+	dev_getattr_sysfs($1)
+	dev_search_sysfs($1)
 ')
 
 ########################################
@@ -129,6 +195,9 @@ interface(`selinux_dontaudit_getattr_fs',`
 	')
 
 	dontaudit $1 security_t:filesystem getattr;
+
+	dev_dontaudit_getattr_sysfs($1)
+	dev_dontaudit_search_sysfs($1)
 ')
 
 ########################################
@@ -165,6 +234,7 @@ interface(`selinux_search_fs',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir search_dir_perms;
 ')
 
@@ -213,7 +283,7 @@ interface(`selinux_dontaudit_read_fs',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The process type to allow to get the enforcing mode.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -223,6 +293,7 @@ interface(`selinux_get_enforce_mode',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file read_file_perms;
 ')
@@ -244,7 +315,7 @@ interface(`selinux_get_enforce_mode',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	The process type to allow to set the enforcement mode.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -256,6 +327,7 @@ interface(`selinux_set_enforce_mode',`
 		bool secure_mode_policyload;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	typeattribute $1 can_setenforce;
@@ -276,7 +348,7 @@ interface(`selinux_set_enforce_mode',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The process type that will load the policy.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -287,6 +359,7 @@ interface(`selinux_load_policy',`
 		bool secure_mode_policyload;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	typeattribute $1 can_load_policy;
@@ -299,6 +372,27 @@ interface(`selinux_load_policy',`
 			auditallow $1 security_t:security load_policy;
 		')
 	}
+')
+
+########################################
+## <summary>
+##	Allow caller to read the policy from the kernel.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`selinux_read_policy',`
+	gen_require(`
+		type security_t;
+	')
+
+	dev_search_sysfs($1)
+	allow $1 security_t:dir list_dir_perms;
+	allow $1 security_t:file read_file_perms;
+	allow $1 security_t:security read_policy;
 ')
 
 ########################################
@@ -323,7 +417,7 @@ interface(`selinux_load_policy',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	The process type allowed to set the Boolean.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -350,7 +444,7 @@ interface(`selinux_set_boolean',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	The process type allowed to set the Boolean.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -358,20 +452,19 @@ interface(`selinux_set_boolean',`
 interface(`selinux_set_generic_booleans',`
 	gen_require(`
 		type security_t;
-		bool secure_mode_policyload;
 	')
+
+	dev_search_sysfs($1)
 
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 
-	if(!secure_mode_policyload) {
-		allow $1 security_t:security setbool;
+	allow $1 security_t:security setbool;
 
-		ifdef(`distro_rhel4',`
-			# needed for systems without audit support
-			auditallow $1 security_t:security setbool;
-		')
-	}
+	ifdef(`distro_rhel4',`
+		# needed for systems without audit support
+		auditallow $1 security_t:security setbool;
+	')
 ')
 
 ########################################
@@ -391,28 +484,33 @@ interface(`selinux_set_generic_booleans',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	The process type allowed to set the Boolean.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
 #
 interface(`selinux_set_all_booleans',`
 	gen_require(`
-		type security_t;
+		type security_t, secure_mode_policyload_t;
 		attribute boolean_type;
 		bool secure_mode_policyload;
 	')
 
+	dev_search_sysfs($1)
+
 	allow $1 security_t:dir list_dir_perms;
-	allow $1 boolean_type:file rw_file_perms;
+	allow $1 { boolean_type -secure_mode_policyload_t }:file rw_file_perms;
+	allow $1 secure_mode_policyload_t:file read_file_perms;
+
+	allow $1 security_t:security setbool;
+
+	ifdef(`distro_rhel4',`
+		# needed for systems without audit support
+		auditallow $1 security_t:security setbool;
+	')
 
 	if(!secure_mode_policyload) {
-		allow $1 security_t:security setbool;
-
-		ifdef(`distro_rhel4',`
-			# needed for systems without audit support
-			auditallow $1 security_t:security setbool;
-		')
+		allow $1 secure_mode_policyload_t:file write_file_perms;
 	}
 ')
 
@@ -433,7 +531,7 @@ interface(`selinux_set_all_booleans',`
 ## </desc>
 ## <param name="domain">
 ##	<summary>
-##	The process type to allow to set security parameters.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -444,6 +542,7 @@ interface(`selinux_set_parameters',`
 		attribute can_setsecparam;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security setsecparam;
@@ -457,7 +556,7 @@ interface(`selinux_set_parameters',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The process type permitted to validate contexts.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -467,6 +566,7 @@ interface(`selinux_validate_context',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security check_context;
@@ -499,7 +599,7 @@ interface(`selinux_dontaudit_validate_context',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The process type allowed to compute an access vector.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -509,6 +609,7 @@ interface(`selinux_compute_access_vector',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security compute_av;
@@ -530,6 +631,7 @@ interface(`selinux_compute_create_context',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security compute_create;
@@ -551,6 +653,7 @@ interface(`selinux_compute_member',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security compute_member;
@@ -580,6 +683,7 @@ interface(`selinux_compute_relabel_context',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security compute_relabel;
@@ -591,7 +695,7 @@ interface(`selinux_compute_relabel_context',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The process type allowed to compute user contexts.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -600,6 +704,7 @@ interface(`selinux_compute_user_contexts',`
 		type security_t;
 	')
 
+	dev_search_sysfs($1)
 	allow $1 security_t:dir list_dir_perms;
 	allow $1 security_t:file rw_file_perms;
 	allow $1 security_t:security compute_user;

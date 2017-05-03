@@ -7,7 +7,7 @@
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -27,7 +27,7 @@ interface(`storage_getattr_fixed_disk_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -47,7 +47,7 @@ interface(`storage_dontaudit_getattr_fixed_disk_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -67,7 +67,7 @@ interface(`storage_setattr_fixed_disk_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -88,7 +88,7 @@ interface(`storage_dontaudit_setattr_fixed_disk_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -111,7 +111,7 @@ interface(`storage_raw_read_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -134,7 +134,7 @@ interface(`storage_dontaudit_read_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -190,11 +190,50 @@ interface(`storage_raw_rw_fixed_disk',`
 
 ########################################
 ## <summary>
+##	Allow the caller to create fixed disk device nodes.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`storage_create_fixed_disk_dev',`
+	gen_require(`
+		type fixed_disk_device_t;
+	')
+
+	allow $1 self:capability mknod;
+	allow $1 fixed_disk_device_t:blk_file create_blk_file_perms;
+	dev_add_entry_generic_dirs($1)
+')
+
+########################################
+## <summary>
+##	Allow the caller to create fixed disk device nodes.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`storage_delete_fixed_disk_dev',`
+	gen_require(`
+		type fixed_disk_device_t;
+	')
+
+	allow $1 fixed_disk_device_t:blk_file delete_blk_file_perms;
+	dev_remove_entry_generic_dirs($1)
+')
+
+########################################
+## <summary>
 ##	Create, read, write, and delete fixed disk device nodes.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -218,7 +257,12 @@ interface(`storage_manage_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
+##	</summary>
+## </param>
+## <param name="filename" optional="true">
+##	<summary>
+##	Optional filename of the block device to be created
 ##	</summary>
 ## </param>
 #
@@ -227,7 +271,7 @@ interface(`storage_dev_filetrans_fixed_disk',`
 		type fixed_disk_device_t;
 	')
 
-	dev_filetrans($1, fixed_disk_device_t, blk_file)
+	dev_filetrans($1, fixed_disk_device_t, blk_file, $2)
 ')
 
 ########################################
@@ -237,7 +281,7 @@ interface(`storage_dev_filetrans_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -255,7 +299,7 @@ interface(`storage_tmpfs_filetrans_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -274,7 +318,7 @@ interface(`storage_relabel_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -294,7 +338,7 @@ interface(`storage_swapon_fixed_disk',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -313,7 +357,7 @@ interface(`storage_getattr_fuse_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain to not audit.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -351,7 +395,7 @@ interface(`storage_dontaudit_rw_fuse',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -371,7 +415,7 @@ interface(`storage_getattr_scsi_generic_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -394,7 +438,7 @@ interface(`storage_setattr_scsi_generic_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -419,7 +463,7 @@ interface(`storage_read_scsi_generic',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -441,7 +485,7 @@ interface(`storage_write_scsi_generic',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -480,7 +524,7 @@ interface(`storage_dontaudit_rw_scsi_generic',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -500,7 +544,7 @@ interface(`storage_getattr_removable_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -519,7 +563,7 @@ interface(`storage_dontaudit_getattr_removable_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -529,7 +573,26 @@ interface(`storage_dontaudit_read_removable_device',`
 
 	')
 
-	dontaudit $1 removable_device_t:blk_file { getattr ioctl read };
+	dontaudit $1 removable_device_t:blk_file read_blk_file_perms;
+')
+
+########################################
+## <summary>
+##	Do not audit attempts made by the caller to write
+##	removable devices device nodes.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain to not audit.
+##	</summary>
+## </param>
+#
+interface(`storage_dontaudit_write_removable_device',`
+	gen_require(`
+		type removable_device_t;
+	')
+
+	dontaudit $1 removable_device_t:blk_file write_blk_file_perms;
 ')
 
 ########################################
@@ -539,7 +602,7 @@ interface(`storage_dontaudit_read_removable_device',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -559,7 +622,7 @@ interface(`storage_setattr_removable_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process to not audit.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
@@ -581,7 +644,7 @@ interface(`storage_dontaudit_setattr_removable_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -622,7 +685,7 @@ interface(`storage_dontaudit_raw_read_removable_device',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -660,7 +723,7 @@ interface(`storage_dontaudit_raw_write_removable_device',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -680,7 +743,7 @@ interface(`storage_read_tape',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -700,7 +763,7 @@ interface(`storage_write_tape',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -720,7 +783,7 @@ interface(`storage_getattr_tape_dev',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed access.
 ##	</summary>
 ## </param>
 #

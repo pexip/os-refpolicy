@@ -6,7 +6,7 @@
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -25,12 +25,12 @@ interface(`clock_domtrans',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
 ##	<summary>
-##	The role to be allowed the clock domain.
+##	Role allowed access.
 ##	</summary>
 ## </param>
 ## <rolecap/>
@@ -50,7 +50,7 @@ interface(`clock_run',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-## 	The type of the process performing this action.
+## 	Domain allowed access.
 ##	</summary>
 ## </param>
 #
@@ -60,6 +60,25 @@ interface(`clock_exec',`
 	')
 
 	can_exec($1, hwclock_exec_t)
+')
+
+########################################
+## <summary>
+##	Read clock drift adjustments.
+## </summary>
+## <param name="domain">
+##	<summary>
+##	Domain allowed access.
+##	</summary>
+## </param>
+#
+interface(`clock_read_adjtime',`
+	gen_require(`
+		type adjtime_t;
+	')
+
+	files_list_etc($1)
+	allow $1 adjtime_t:file read_file_perms;
 ')
 
 ########################################

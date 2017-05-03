@@ -18,8 +18,8 @@ interface(`unconfined_domain_noaudit',`
 		class passwd all_passwd_perms;
 	')
 
-	# Use any Linux capability.
-	allow $1 self:capability *;
+	# Use most Linux capabilities
+	allow $1 self:capability ~sys_module;
 	allow $1 self:fifo_file manage_fifo_file_perms;
 
 	# Transition to myself, to make get_ordered_context_list happy.
@@ -67,8 +67,7 @@ interface(`unconfined_domain_noaudit',`
 	')
 
 	optional_policy(`
-		# Communicate via dbusd.
-		dbus_system_bus_unconfined($1)
+		dbus_unconfined($1)
 	')
 
 	optional_policy(`
@@ -101,9 +100,20 @@ interface(`unconfined_domain_noaudit',`
 ########################################
 ## <summary>
 ##	Make the specified domain unconfined and
-##	audit executable memory and executable heap
-##	usage.
+##	audit executable heap usage.
 ## </summary>
+## <desc>
+##	<p>
+##	Make the specified domain unconfined and
+##	audit executable heap usage.  With exception
+##	of memory protections, usage of this interface
+##	will result in the level of access the domain has
+##	is like SELinux	was not being used.
+##	</p>
+##	<p>
+##	Only completely trusted domains should use this interface.
+##	</p>
+## </desc>
 ## <param name="domain">
 ##	<summary>
 ##	Domain to make unconfined.
@@ -116,11 +126,6 @@ interface(`unconfined_domain',`
 	tunable_policy(`allow_execheap',`
 		auditallow $1 self:process execheap;
 	')
-
-# Turn off this audit for FC5
-#	tunable_policy(`allow_execmem',`
-#		auditallow $1 self:process execmem;
-#	')
 ')
 
 ########################################
@@ -179,7 +184,7 @@ interface(`unconfined_execmem_alias_program',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -197,7 +202,7 @@ interface(`unconfined_domtrans',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	The type of the process performing this action.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 ## <param name="role">
@@ -221,7 +226,7 @@ interface(`unconfined_run',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain allowed to transition.
 ##	</summary>
 ## </param>
 #
@@ -407,7 +412,7 @@ interface(`unconfined_read_pipes',`
 ## </summary>
 ## <param name="domain">
 ##	<summary>
-##	Domain allowed access.
+##	Domain to not audit.
 ##	</summary>
 ## </param>
 #
