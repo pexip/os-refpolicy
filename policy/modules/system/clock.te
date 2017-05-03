@@ -1,5 +1,4 @@
-
-policy_module(clock, 1.6.0)
+policy_module(clock, 1.8.0)
 
 ########################################
 #
@@ -25,13 +24,14 @@ allow hwclock_t self:capability { dac_override sys_rawio sys_time sys_tty_config
 dontaudit hwclock_t self:capability sys_tty_config;
 allow hwclock_t self:process signal_perms;
 allow hwclock_t self:fifo_file rw_fifo_file_perms;
-dev_read_urand(hwclock_t)
 
 # Allow hwclock to store & retrieve correction factors.
 allow hwclock_t adjtime_t:file { rw_file_perms setattr };
 
 kernel_read_kernel_sysctls(hwclock_t)
 kernel_read_system_state(hwclock_t)
+# for when /usr is not mounted:
+kernel_dontaudit_search_unlabeled(hwclock_t)
 
 corecmd_exec_bin(hwclock_t)
 corecmd_exec_shell(hwclock_t)
@@ -40,16 +40,14 @@ dev_read_sysfs(hwclock_t)
 dev_rw_realtime_clock(hwclock_t)
 
 files_read_etc_files(hwclock_t)
-# for when /usr is not mounted:
-files_dontaudit_search_isid_type_dirs(hwclock_t)
 
 fs_getattr_xattr_fs(hwclock_t)
 fs_search_auto_mountpoints(hwclock_t)
 
 term_dontaudit_use_console(hwclock_t)
 term_use_unallocated_ttys(hwclock_t)
-term_use_all_user_ttys(hwclock_t)
-term_use_all_user_ptys(hwclock_t)
+term_use_all_ttys(hwclock_t)
+term_use_all_ptys(hwclock_t)
 
 domain_use_interactive_fds(hwclock_t)
 
@@ -67,7 +65,7 @@ optional_policy(`
 ')
 
 optional_policy(`
-	nscd_socket_use(hwclock_t)
+	nscd_use(hwclock_t)
 ')
 
 optional_policy(`

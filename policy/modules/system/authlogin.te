@@ -1,14 +1,22 @@
-
-policy_module(authlogin, 2.1.0)
+policy_module(authlogin, 2.6.0)
 
 ########################################
 #
 # Declarations
 #
 
+
+## <desc>
+## <p>
+## Allow users to resolve user passwd entries directly from ldap rather then using a sssd server
+## </p>
+## </desc>
+gen_tunable(authlogin_nsswitch_use_ldap, false)
+
 attribute can_read_shadow_passwords;
 attribute can_write_shadow_passwords;
 attribute can_relabelto_shadow_passwords;
+attribute nsswitch_domain;
 
 type auth_cache_t;
 logging_log_file(auth_cache_t)
@@ -45,13 +53,13 @@ type pam_tmp_t;
 files_tmp_file(pam_tmp_t)
 
 type pam_var_console_t;
-files_type(pam_var_console_t)
+files_pid_file(pam_var_console_t)
 
 type pam_var_run_t;
 files_pid_file(pam_var_run_t)
 
 type shadow_t;
-files_security_file(shadow_t)
+files_auth_file(shadow_t)
 neverallow ~can_read_shadow_passwords shadow_t:file read;
 neverallow ~can_write_shadow_passwords shadow_t:file { create write };
 neverallow ~can_relabelto_shadow_passwords shadow_t:file relabelto;
@@ -84,11 +92,12 @@ logging_log_file(wtmp_t)
 
 allow chkpwd_t self:capability { dac_override setuid };
 dontaudit chkpwd_t self:capability sys_tty_config;
-allow chkpwd_t self:process getattr;
+allow chkpwd_t self:process { getattr signal };
 
 allow chkpwd_t shadow_t:file read_file_perms;
 files_list_etc(chkpwd_t)
 
+kernel_read_crypto_sysctls(chkpwd_t)
 # is_selinux_enabled
 kernel_read_system_state(chkpwd_t)
 
@@ -96,6 +105,7 @@ domain_dontaudit_use_interactive_fds(chkpwd_t)
 
 dev_read_rand(chkpwd_t)
 dev_read_urand(chkpwd_t)
+dev_search_sysfs(chkpwd_t)
 
 files_read_etc_files(chkpwd_t)
 # for nscd
@@ -103,8 +113,10 @@ files_dontaudit_search_var(chkpwd_t)
 
 fs_dontaudit_getattr_xattr_fs(chkpwd_t)
 
+term_dontaudit_use_console(chkpwd_t)
 term_dontaudit_use_unallocated_ttys(chkpwd_t)
 term_dontaudit_use_generic_ptys(chkpwd_t)
+term_dontaudit_use_all_ptys(chkpwd_t)
 
 auth_use_nsswitch(chkpwd_t)
 
@@ -125,7 +137,16 @@ ifdef(`distro_ubuntu',`
 ')
 
 optional_policy(`
+	# apache leaks file descriptors
+	apache_dontaudit_rw_tcp_sockets(chkpwd_t)
+')
+
+optional_policy(`
 	kerberos_use(chkpwd_t)
+')
+
+optional_policy(`
+	nis_authenticate(chkpwd_t)
 ')
 
 ########################################
@@ -138,7 +159,7 @@ dontaudit pam_t self:capability sys_tty_config;
 
 allow pam_t self:fd use;
 allow pam_t self:fifo_file rw_file_perms;
-allow pam_t self:unix_dgram_socket create_socket_perms; 
+allow pam_t self:unix_dgram_socket create_socket_perms;
 allow pam_t self:unix_stream_socket rw_stream_socket_perms;
 allow pam_t self:unix_dgram_socket sendto;
 allow pam_t self:unix_stream_socket connectto;
@@ -165,8 +186,8 @@ fs_search_auto_mountpoints(pam_t)
 
 miscfiles_read_localization(pam_t)
 
-term_use_all_user_ttys(pam_t)
-term_use_all_user_ptys(pam_t)
+term_use_all_ttys(pam_t)
+term_use_all_ptys(pam_t)
 
 init_dontaudit_rw_utmp(pam_t)
 
@@ -199,6 +220,7 @@ dontaudit pam_console_t pam_var_console_t:file write;
 
 kernel_read_kernel_sysctls(pam_console_t)
 kernel_use_fds(pam_console_t)
+kernel_dontaudit_search_unlabeled(pam_console_t)
 # Read /proc/meminfo
 kernel_read_system_state(pam_console_t)
 
@@ -234,7 +256,6 @@ dev_read_urand(pam_console_t)
 files_read_etc_files(pam_console_t)
 files_search_pids(pam_console_t)
 files_list_mnt(pam_console_t)
-files_dontaudit_search_isid_type_dirs(pam_console_t)
 # read /etc/mtab
 files_read_etc_runtime_files(pam_console_t)
 
@@ -253,8 +274,8 @@ storage_getattr_scsi_generic_dev(pam_console_t)
 storage_setattr_scsi_generic_dev(pam_console_t)
 
 term_use_console(pam_console_t)
-term_use_all_user_ttys(pam_console_t)
-term_use_all_user_ptys(pam_console_t)
+term_use_all_ttys(pam_console_t)
+term_use_all_ptys(pam_console_t)
 term_setattr_console(pam_console_t)
 term_getattr_unallocated_ttys(pam_console_t)
 term_setattr_unallocated_ttys(pam_console_t)
@@ -270,7 +291,7 @@ init_use_script_ptys(pam_console_t)
 logging_send_syslog_msg(pam_console_t)
 
 miscfiles_read_localization(pam_console_t)
-miscfiles_read_certs(pam_console_t)
+miscfiles_read_generic_certs(pam_console_t)
 
 seutil_read_file_contexts(pam_console_t)
 
@@ -354,10 +375,10 @@ dev_read_urand(utempter_t)
 
 files_read_etc_files(utempter_t)
 
-term_getattr_all_user_ttys(utempter_t)
-term_getattr_all_user_ptys(utempter_t)
-term_dontaudit_use_all_user_ttys(utempter_t)
-term_dontaudit_use_all_user_ptys(utempter_t)
+term_getattr_all_ttys(utempter_t)
+term_getattr_all_ptys(utempter_t)
+term_dontaudit_use_all_ttys(utempter_t)
+term_dontaudit_use_all_ptys(utempter_t)
 term_dontaudit_use_ptmx(utempter_t)
 
 init_rw_utmp(utempter_t)
@@ -377,10 +398,69 @@ ifdef(`distro_ubuntu',`
 ')
 
 optional_policy(`
-	nscd_socket_use(utempter_t)
+	nscd_use(utempter_t)
 ')
 
 optional_policy(`
 	xserver_use_xdm_fds(utempter_t)
 	xserver_rw_xdm_pipes(utempter_t)
+')
+
+#######################################
+#
+# nsswitch_domain local policy
+#
+
+files_list_var_lib(nsswitch_domain)
+
+# read /etc/nsswitch.conf
+files_read_etc_files(nsswitch_domain)
+
+sysnet_dns_name_resolve(nsswitch_domain)
+
+tunable_policy(`authlogin_nsswitch_use_ldap',`
+	files_list_var_lib(nsswitch_domain)
+
+	miscfiles_read_generic_certs(nsswitch_domain)
+	sysnet_use_ldap(nsswitch_domain)
+')
+
+optional_policy(`
+	tunable_policy(`authlogin_nsswitch_use_ldap',`
+		ldap_stream_connect(nsswitch_domain)
+	')
+')
+
+optional_policy(`
+	avahi_stream_connect(nsswitch_domain)
+')
+
+optional_policy(`
+	likewise_stream_connect_lsassd(nsswitch_domain)
+')
+
+optional_policy(`
+	kerberos_use(nsswitch_domain)
+')
+
+optional_policy(`
+	nis_use_ypbind(nsswitch_domain)
+')
+
+optional_policy(`
+	nscd_use(nsswitch_domain)
+')
+
+optional_policy(`
+	nslcd_stream_connect(nsswitch_domain)
+')
+
+optional_policy(`
+	sssd_stream_connect(nsswitch_domain)
+')
+
+optional_policy(`
+	samba_stream_connect_winbind(nsswitch_domain)
+	samba_read_var_files(nsswitch_domain)
+	samba_dontaudit_write_var_files(nsswitch_domain)
 ')

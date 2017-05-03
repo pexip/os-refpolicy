@@ -1,5 +1,4 @@
-
-policy_module(terminal, 1.7.0)
+policy_module(terminal, 1.12.1)
 
 ########################################
 #
@@ -22,13 +21,13 @@ type console_device_t;
 dev_node(console_device_t)
 
 #
-# devpts_t is the type of the devpts file system and 
+# devpts_t is the type of the devpts file system and
 # the type of the root directory of the file system.
 #
 type devpts_t;
 files_mountpoint(devpts_t)
 fs_associate_tmpfs(devpts_t)
-fs_type(devpts_t)
+fs_xattr_type(devpts_t)
 fs_use_trans devpts gen_context(system_u:object_r:devpts_t,s0);
 
 #
@@ -44,6 +43,7 @@ mls_trusted_object(devtty_t)
 type ptmx_t;
 dev_node(ptmx_t)
 mls_trusted_object(ptmx_t)
+allow ptmx_t devpts_t:filesystem associate;
 
 #
 # tty_device_t is the type of /dev/*tty*
@@ -56,3 +56,6 @@ dev_node(tty_device_t)
 #
 type usbtty_device_t, serial_device;
 dev_node(usbtty_device_t)
+
+type virtio_device_t, serial_device;
+dev_node(virtio_device_t)

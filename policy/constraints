@@ -87,7 +87,7 @@ ifdef(`enable_ubac',`
 	);
 ')
 
-constrain process { transition noatsecure siginh rlimitinh }
+constrain process { transition dyntransition noatsecure siginh rlimitinh }
 (
 	u1 == u2
 	or ( t1 == can_change_process_identity and t2 == process_user_target )
@@ -96,18 +96,13 @@ constrain process { transition noatsecure siginh rlimitinh }
 	or ( t1 == process_uncond_exempt )
 );
 
-constrain process { transition noatsecure siginh rlimitinh }
+constrain process { transition dyntransition noatsecure siginh rlimitinh }
 (
 	r1 == r2 
 	or ( t1 == can_change_process_role and t2 == process_user_target )
    	or ( t1 == cron_source_domain and t2 == cron_job_domain )
 	or ( t1 == can_system_change and r2 == system_r )
 	or ( t1 == process_uncond_exempt )
-);
-
-constrain process dyntransition
-(
-	u1 == u2 and r1 == r2
 );
 
 # These permissions do not have ubac constraints:
@@ -154,6 +149,7 @@ exempted_ubac_constraint(netlink_dnrt_socket, ubacsock)
 exempted_ubac_constraint(netlink_kobject_uevent_socket, ubacsock)
 exempted_ubac_constraint(appletalk_socket, ubacsock)
 exempted_ubac_constraint(dccp_socket, ubacsock)
+exempted_ubac_constraint(tun_socket, ubacsock)
 
 constrain socket_class_set { create relabelto relabelfrom } 
 (

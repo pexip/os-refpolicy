@@ -1,9 +1,1071 @@
-refpolicy (2:0.2.20091117-1ubuntu1) lucid; urgency=low
+refpolicy (2:2.20140421-16) jessie; urgency=medium
 
-  * debian/control: drop "selinux" conflict for sane installation
-    in Ubuntu (Debian bug 576598).
+  * New mon policy with separate domains for local and network tests.
+  * Allow systemd_tmpfiles_t to create wtmp_t file
+  * Backported lots of fsadm_t changes
+  * Give unconfined domains the syslog capability for dmesg
 
- -- Kees Cook <kees@ubuntu.com>  Mon, 05 Apr 2010 13:03:23 -0700
+ -- Russell Coker <russell@coker.com.au>  Wed, 21 Dec 2016 19:02:35 +1100
+
+refpolicy (2:2.20140421-15) jessie; urgency=medium
+
+  * Allow mon_test_t to run sudo and label helper dir as mon_test_exec_t
+    and read sysfs.
+  * Allow udev_t and init_t the wake_alarm capability for 4.x kernels.
+
+ -- Russell Coker <russell@coker.com.au>  Tue, 29 Nov 2016 16:18:47 +1100
+
+refpolicy (2:2.20140421-14) jessie; urgency=medium
+
+  * Allow mon_test_t to get RAID status and write to mon_var_lib_t
+    Allow mon_test_t to exec mon_test_exec_t (for chained tests)
+    Allow mon_test_t to read BIND config files
+  * Added auth_read_var_auth(mozilla_t) and allowed mozilla to create mozilla_tmpfs_t
+    directories for /var/run/auth/PID/pulse. Allow mozilla_t setcap and exec of
+    mozilla_home_t for plugins. Allow mozilla to read vm_sysctls for overcommit memory
+    status.
+  * Label /usr/bin/boinc as boinc_exec_t and /var/lib/boinc-client(/.*)? as
+    boinc_var_lib_t. Allow boinc to exec itself. Allow boinc to exec lib_t.
+    Label /var/log/boincerr.log. Allow boinc-client to write to
+    /etc/boinc-client/global_prefs_override.xml
+    Allow boinc to event_device_t, mouse_device_t, ptmx_t, devpts_t, and
+    user_tty_device_t character devices to
+    find out when system is idle
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 24 Jul 2016 14:58:11 +1000
+
+refpolicy (2:2.20140421-13) jessie; urgency=medium
+
+  * Allow dovecot_auth_t to get the SE Linux mount point for PAM authentication
+  * Allow unconfined domains to get the service status for etc_t.
+  * Allow mailman_queue_t to read bin_t symlinks
+  * Allow clamd_t and spamass_milter_t to read sysfs_t files
+  * Allow system_cronjob_t to read mrtg_etc_t to see if it's enabled
+  * Allow httpd_t to send signull to httpd_sys_script_t
+    Allow httpd_sys_script_t to read/write stream sockets it inherits from httpd_t
+    Allow httpd_t to read httpd_script_exec_type symlinks
+  * Allow postgrey_t to read bin_t for perl
+  * Label /usr/bin/prosody, /var/run/prosody, /var/lib/prosody, and /var/log/prosody
+    as jabber types.
+    Allow jabberd_t to exec bin_t (to run env), read usr_t (for lua modules), and
+    have netlink read access.
+  * Set context for /var/run/spamassassin.pid
+  * Allow passwd_t to be in unconfined_r for dpkg to create new users
+  * Reserve port 10023 for postgrey too
+  * Allow semanage_t to execute a shell for "semanage permissive" commands.
+  * Allow ping to read /dev/urandom
+  * Make create_chr_file_perms include setattr access for autofs device
+  * Allow initrc_t to create and setattr var_run_t dirs
+  * Allow initrc_t to create dirs under /dev for /dev/net (needed for 6to4)
+  * Allow initrc_t to create tmpfs_t files
+  * Added policy for mon network monitoring
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 05 May 2016 16:27:38 +1000
+
+refpolicy (2:2.20140421-12) jessie; urgency=medium
+
+  * Allow init_t to manage init_var_run_t symlinks and self getsched
+    to relabel files and dirs to etc_runtime_t for /run/blkid
+    to read/write init_var_run_t fifos for /run/initctl
+    kernel_rw_unix_sysctls() for setting max_dgram_qlen (and eventually other
+    sysctls)
+  * Allow restorecond_t and setfiles_t to getattr pstore_t and debugfs_t filesystems
+  * Allow kernel_t to setattr/getattr/unlink tty_device_t for kdevtmpfs
+  * Label /usr/share/bug/.* files as bin_t for reportbug in strict configuration
+  * Label /run/tmpfiles.d/kmod.conf as kmod_var_run_t and allow insmod_t to create it
+  * apache_unlink_var_lib() now includes write access to httpd_var_lib_t:dir 
+  * Allow apache to read sysctl_vm_t for overcommit_memory
+    Allow httpd_sys_script_t to read sysfs_t. allow httpd_t to manage httpd_log_t files
+    and directories for mod_pagespeed.
+  * Removed bogus .* in mailman file context that was breaking the regex
+  * Lots of mailman changes
+  * Allow system_mail_t read/write access to crond_tmp_t
+  * Allow postfix_pipe_t to write to postfix_public_t sockets
+  * Label /usr/share/mdadm/checkarray as bin_t
+  * Let systemd_passwd_agent_t, chkpwd_t, and dovecot_auth_t get enforcing status
+  * Allow systemd_tmpfiles_t to create the cpu_device_t device
+  * Allow init_t to manage init_var_run_t links
+  * Allow groupadd_t the fsetid capability
+  * Allow dpkg_script_t to transition to passwd_t. Label dpkg-statoverride as
+    setfiles_exec_t for changing SE Linux context. Allow setfiles_t to read
+    dpkg_var_lib_t so dpkg-statoverride can do it's job
+  * Allow initrc_t to write to fsadm_log_t for logsave in strict configuration
+  * Allow webalizer to read fonts and allow logrotate to manage webaliser_usage_t files
+    also allow it to be run by logrotate_t.
+  * Allow jabber to read ssl certs and give it full access to it's log files
+    Don't audit jabber running ps.
+  * Made logging_search_logs() allow reading var_log_t:lnk_file for symlinks in log dir
+  * Allow webalizer to read usr_t and created webalizer_log_t for it's logs
+  * Made logging_log_filetrans and several other logging macros also allow reading
+    var_log_t links so a variety of sysadmin symlinks in /var/log won't break things
+  * Allow postfix_policyd_t to execute bin_t, read urandom, and capability chown.
+    New type postfix_policyd_tmp_t
+  * Added user_udp_server boolean
+  * Allow apt_t to manage dirs of type apt_var_cache_t
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 28 Feb 2016 12:39:36 +1100
+
+refpolicy (2:2.20140421-11) unstable; urgency=medium
+
+  * Allow jabber to connect to the jabber_interserver_port_t TCP port
+    Closes: #697843
+  * Allow xm_t to create xen_lock_t files for creating the first Xen DomU
+  * Allow init_t to manage init_var_run_t for service file symlinks
+  * Add init_telinit(dpkg_script_t) for upgrading systemd
+  * Allow dpkg_script_t the setfcap capability for systemd postinst.
+  * Add domain_getattr_all_domains(init_t) for upgrading strict mode systems
+  * Allow *_systemctl_t domains read initrc_var_run_t (/run/utmp), read proc_t,
+    and have capability net_admin.  Allow logrotate_systemctl_t to manage all
+    services.
+  * Give init_t the audit_read capability for systemd
+  * Allow iodined_t access to netlink_route_socket.
+  * add init_read_state(systemd_cgroups_t) and init_read_state(systemd_tmpfiles_t)
+    for /proc/1/environ
+  * Label /etc/openvpn/openvpn-status.log as openvpn_status_t as it seems to be some
+    sort of default location. /var/log is a better directory for this
+  * Allow syslogd_t to write to a netlink_audit_socket for systemd-journal
+  * Allow mandb_t to get filesystem attributes
+  * Allow syslogd to rename and unlink init_var_run_t files for systemd temporary files
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 16 Sep 2015 17:02:34 +1000
+
+refpolicy (2:2.20140421-10.1) unstable; urgency=medium
+
+  * Allow ntpd_t to delete files for peerstats and loopstats
+  * Add correct file labels for squid3 and tunable for squid pinger raw net
+    access (default true)
+  * Allow qemu_t to read crypto sysctls, rw xenfs files, and connect to xenstored
+    unix sockets
+  * Allow qemu_t to read sysfs files for cpu online
+  * Allow qemu to append xend_var_log_t for /var/log/xen/qemu-dm-*
+  * Allow xm_t (xl program) to create and rename xend_var_log_t files, read
+    kernel images, execute qemu, and inherit fds from sshd etc.
+  * Allow xm_t and iptables_t to manage udev_var_run_t to communicate via
+    /run/xen-hotplug/iptables for when vif-bridge runs iptables
+  * Allow xm_t to write to xen_lock_t files not var_lock_t
+  * Allow xm_t to load kernel modules
+  * Allow xm_t to signal qemu_t, talk to it by unix domain sockets, and unlink it's
+    sockets
+  * dontaudit xm_t searching home dir content
+  * Label /run/xen as xend_var_run_t and allow qemu_t to create sock_files in
+    xend_var_run_t directory
+  * Label /var/lock/xl as xen_lock_t
+  * allow unconfined_t to execute xl/xm in xm_t domain.
+  * Allow system_cronjob_t to configure all systemd services (restart all
+    daemons)
+  * Allow dpkg_script_t and unconfined_t to manage systemd service files of
+    type null_device_t (symlinks to /dev/null)
+  * Label /var/run/lwresd/lwresd.pid as named_var_run_t
+  * Label /run/xen/qmp* as qemu_var_run_t
+  * Also label squid3.pid
+  * Allow iptables_t to be in unconfined_r (for Xen)
+  * Allow udev_t to restart systemd services
+    Closes: #756729
+  * Merge Laurent's changes with mine
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 14 Sep 2015 10:54:43 +1000
+
+refpolicy (2:2.20140421-10) UNRELEASED; urgency=medium
+
+  * debian/gbp.conf: Sign tags by default (Closes: #781670)
+  * debian/control: Adjust and cleanup the {build-}dependencies (Closes:
+    #805496)
+  * debian/control: Bump Standards-Version to 3.9.6 (no further changes)
+  * debian/rules: Make the build reproducible (Closes: #778232)
+  * Remove deprecated system.users and local.users files
+  * debian/control: Update Homepage URL (Closes: #780934)
+  * debian/rules: Allow parallel build now that the build system is supporting
+    it, see #677689
+  * debian/policygentool: Remove string exceptions so the script is Python >=
+    2.6 compatible (Closes: #585355)
+
+ -- Laurent Bigonville <bigon@debian.org>  Thu, 26 Nov 2015 16:55:44 +0100
+
+refpolicy (2:2.20140421-9) unstable; urgency=medium
+
+  * Allow dovecot_t to read /usr/share/dovecot/protocols.d
+    Allow dovecot_t capability sys_resource
+    Label /usr/lib/dovecot/* as bin_t unless specified otherwise
+    Allow dovecot_auth_t to manage dovecot_var_run_t for auth tokens
+  * Allow clamd_t capability { chown fowner fsetid }
+    Allow clamd_t to read sysctl_vm_t
+  * Allow dkim_milter_t capability dac_override and read sysctl_vm_t
+    allow dkim_milter_t to bind to unreserved UDP ports
+  * Label all hard-links of perdition perdition_exec_t
+    Allow perdition to read /dev/urandom and capabilities dac_override, chown,
+    and fowner
+    Allow perdition file trans to perdition_var_run_t for directories
+    Also proxy the sieve service - sieve_port_t
+    Allow connecting to mysql for map data
+  * Allow nrpe_t to read nagios_etc_t and have capability dac_override
+  * Allow httpd_t to write to initrc_tmp_t files
+    Label /var/lib/php5(/.*)? as httpd_var_lib_t
+  * Allow postfix_cleanup_t to talk to the dkim filter
+    allow postfix_cleanup_t to use postfix_smtpd_t fds (for milters)
+    allow postfix_smtpd_t to talk to clamd_t via unix sockets
+    allow postfix_master_t to execute hostname for Debian startup scripts
+  * Allow unconfined_cronjob_t role system_r and allow it to restart daemons
+    via systemd
+    Allow system_cronjob_t to unlink httpd_var_lib_t files (for PHP session
+    cleanup)
+  * Allow spamass_milter_t to search the postfix spool and sigkill itself
+    allow spamc_t to be in system_r for when spamass_milter runs it
+  * Allow courier_authdaemon_t to execute a shell
+  * Label /usr/bin/maildrop as procmail_exec_t
+    Allow procmail_t to connect to courier authdaemon for the courier maildrop,
+    also changed courier_stream_connect_authdaemon to use courier_var_run_t
+    for the type of the socket file
+    Allow procmail_t to read courier config for maildrop.
+  * Allow system_mail_t to be in role unconfined_r
+  * Label ldconfig.real instead of ldconfig as ldconfig_exec_t
+  * Allow apt_t to list directories of type apt_var_log_t
+  * Allow dpkg_t to execute dpkg_tmp_t and load kernel modules for
+    dpkg-preconfigure
+  * Allow dpkg_script_t to create udp sockets, netlink audit sockets, manage
+    shadow files, process setfscreate, and capabilities audit_write net_admin
+    sys_ptrace
+  * Label /usr/lib/xen-*/xl as xm_exec_t
+
+ -- Russell Coker <russell@coker.com.au>  Fri, 06 Feb 2015 02:31:05 +1100
+
+refpolicy (2:2.20140421-8) unstable; urgency=medium
+
+  * Make all of /etc/ssl apart from /etc/ssl/private etc_t
+  * Allow systemd_logind_t to search xdm_tmp_t:dir
+    Allow systemd_tmpfiles_t to create xdm_tmp_t:dir
+    Make xserver_create_xdm_tmp_socket also allow unlinking the socket
+    Allow systemd_tmpfiles_t to create xdm_tmp_t dir
+    Allow systemd_logind_t to search xdm_tmp_t
+    Allow system_dbusd_t to write to systemd_logind_var_run_t:fifo_file
+    for /run/systemd/inhibit/*.ref also added fc for /run/systemd/inhibit
+    Allow system_dbusd_t to write to /run/systemd/inhibit/* pipes
+    Allow user_t to talk to user_dbusd_t via unix sockets and also all
+    dbus clients
+    Allow systemd_tmpfiles_t to create xfs_tmp_t dirs
+    Closes: #771482
+  * Allow userdomains netlink_audit_socket access for logging of X unlock
+  * Allow $1_user_ssh_agent_t to send sigchld to xdm_t
+  * Allow local_login_t to write to systemd sessions pipes
+  * Allow policykit_t to read /run/systemd/machines and /run/systemd/seats/*
+  * Allow init_status() for user domains for kdeinit
+  * Remove most of the gpg stuff that I put in 2:2.20140421-7.
+    Just remove gpg_helper_t, merge gpg_pinentry_t with the main gpg domain,
+    and make the gpg_t domain only used from user_t. Domain trans from
+    gpg_agent_t to user_t when running bin_t such as ck-launch-session.
+    Allow gpg_agent_t and *_ssh_agent_t to append to an inherited user_home_t
+    file
+    Closes: #771484
+  * Allow user_dbusd_t to append to user_home_t
+  * Allow load_policy_t to read /dev/urandom.
+  * Label /usr/lib/dovecot/(log)|(ssl-params)|(anvil) dovecot_exec_t so they
+    can be executed by the main dovecot daemon.
+    Closes: #775223
+  * Allow alsa_t to create lockfiles and added fc for
+    /run/lock/asound.state.lock
+  * Allow local_login_t capability net_admin
+  * Allow systemd_logind_t capability sys_admin and mount tmpfs_t
+  * Allow mozilla_t (Chrome) to manage symlinks in /tmp and create sockets
+    Allow chrome_sandbox_t to use user_t fd.
+    Allow mozilla_t to use netlink_kobject_uevent_socket.
+    Label ~/.config/google-chrome as mozilla_home_t
+    Label /opt/google/chrome/nacl_helper as chrome_browser_exec_t
+    Allow chrome_sandbox_t to write to users pty (for startup error messages)
+    Closes: #771483
+  * Allow userdomains to read vm sysctls and to create a
+    netlink_kobject_uevent_socket.
+  * Allow initrc_t to perform systemd service start/stop operations on
+    initrc_var_run_t files. This may be a bug in systemd.
+  * Label .xsession-errors as user_home_t when xdm_t creates it.
+  * Label /usr/sbin/dhcp6c as dhcpc_exec_t /run/dhcp6c.pid as dhcpc_var_run_t
+    and /var/lib/dhcpv6 as dhcpc_state_t
+  * Dontaudit getty_t capability sys_admin
+  * Allow cronjob_t read-write access to crond_tmp_t.
+  * Allow gconfd_t to read /var/lib/gconf/defaults and /proc/filesystems
+  * Allow fsadm_t to stat mount_var_run_t for /run/mount/utab
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 19 Jan 2015 16:27:05 +1100
+
+refpolicy (2:2.20140421-7) unstable; urgency=medium
+
+  * Label /run/systemd/journal/dev-log and /run/systemd/journal/stdout as
+    devlog_t
+  * Allow bootloadter_t to load kernel modules and run apt-cache
+  * Allow systemd_cgroups_t to read /proc/cmdline
+  * Allow sshd net_admin capability
+  * Allow systemd_logind_t to read kernel sysctls, list tmpfs, and mount on
+    /var/auth, and systemd_unit_file_t:service stop.
+  * Allow dpkg_script_t to restart systemd unit files of type init_var_run_t
+  * Allow local_login_t and user_t to talk to systemd_logind via dbus
+  * Allow user_ssh_agent_t to read/write it's own fifo files
+  * Allow user_t to talk to gconfd_t via dbus
+  * Allow gpg_agent_t to send sigchld to xdm_t, to be a system dbus client,
+    to use nsswitch, and to read user xauth file
+  * Allow $1_dbusd_t domains systemd_login_read_pid_files access
+  * Remove gpg_helper_t, merge gpg_pinentry_t with the main gpg domain, and
+    create user_gpg_t, staff_gpg_t, etc.
+  * Allow userdomains to talk to kerneloops via dbus
+  * Allow sysstat_t to search all mountpoints
+  * Allow udev_t self:netlink_route_socket nlmsg_write for interface rename
+  * Allow systemd_tmpfiles_t to read kernel sysctls for boot_id
+  * Allow setfiles_t to read /dev/urandom
+  * Label /var/run/blkid as etc_runtime_t
+
+  * TLDR: Make everything work with latest systemd and allow KDE login with
+    latest X11 configuration.
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 13 Oct 2014 09:41:44 +1100
+
+refpolicy (2:2.20140421-6) unstable; urgency=medium
+
+  [ Laurent Bigonville ]
+  * debian/patches/0046-misc-not-systemd: Remove duplicate
+    dev_associate(hugetlbfs_t) rule
+
+  [ Russell Coker ]
+  * Allow dpkg_script_t to restart all daemons under systemd
+  * Allow ndc_t the block_suspend capability
+  * Allow systemd_logind_t self:process signal access
+  * allow systemd_logind_t systemd_unit_file_t:service start;
+  * allow systemd_tmpfiles_t and systemd_cgroups_t capability net_admin
+  * allow systemd_tmpfiles_t process getcap
+  * storage_getattr_fixed_disk_dev(xend_t) for running lsscsi
+  * Allow xenstored_t to search bin_t
+  * New type systemd_journal_log_t for /var/log/journal and
+    /var/run/log/journal
+  * Added audit_read to capability2 class
+  * Allow kerneloops_t, systemd_tmpfiles_t, and systemd_logind_t to read
+    /dev/urandom
+  * Allow all user domains to read /var/lib/dpkg
+  * Allow udev_t to read kernel module files for systemd-udevd
+  * Allow alsa_t to search locks
+  * Allow systemd-tmpfilesd to setattr many device types and create
+    /dev/xconsole
+  * Allow unconfined_t to get statyus of systemd jobs
+  * Add FC entry for /var/run/wd_keepalive.pid and /var/run/sm-notify.pid
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 13 Sep 2014 16:15:12 +1000
+
+refpolicy (2:2.20140421-5) unstable; urgency=medium
+
+  * Allow system_cronjob_t to read apt_var_lib_t and ntp_conf_t.
+  * Allow init_t to create /dev/log and netlink_audit_socket accesss
+  * Allow init_t to manage systemd_passwd_var_run_t links
+  * Allow freshclam_t to talk to http_cache_port_t
+  * Allow system_cronjob_t to talk to init socket for restarting daemons under
+    systemd
+  * allow init_t setsched access for (tmpfiles) from systemd
+  * Allow dpkg_t to transition to dpkg_script_t when running dpkg_var_lib_t
+    (postinst etc scripts)
+  * Allow init_t netlink_selinux_socket access for commands like "halt" in
+    strict mode
+  * Allow initrc_t to perform service operations on init_script_file_type
+  * Label /opt/google/chrome/cron/google-chrome bin_t
+  * Make Chrome/Chromium run in the correct domain
+  * Add domain systemd_cgroups_t for kernel executing
+    /lib/systemd/systemd-cgroups-agent
+  * Allow dpkg_script_t to read the policy
+  * Allow systemd_passwd_agent_t to write to /dev/kmsg and log to syslogd
+  * Allow init_t to write to watchdog_device_t for systemd shutdown
+  * Allow initrc_t to write net_conf_t for network boot scripts
+  * Allow init_t to create var_auth_t directories for systemd
+  * Allow initrc_t to read postfix config on Debian
+  * Allow initrc_t to talk to init_t via unix sockets
+  * Allow init_t to read udev_var_run_t files for systemd to read udev output
+  * Allow init_t to read all pidfiles, for systemd
+  * Allow postfix_postqueue_t to send sigchld to all userdomains
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 03 Jul 2014 20:45:34 +1000
+
+refpolicy (2:2.20140421-4) unstable; urgency=medium
+
+  * Team upload.
+  * debian/rules: Properly expand flavour directory during build
+  * debian/rules: Properly remove postrm scripts in clean target
+  * debian/postinst.policy: Remove the modules that are not built anymore from
+    the notdefault list
+  * debian/postinst.policy: Remove the .disabled file for the modules that are
+    now built in the base.pp or not built anymore at all.
+
+ -- Laurent Bigonville <bigon@debian.org>  Sun, 29 Jun 2014 17:33:39 +0200
+
+refpolicy (2:2.20140421-3) unstable; urgency=medium
+
+  * Allow sysadm_t to read policy
+  * Make systemd_login_list_pid_dirs() call init_search_pid_dirs() as it
+    doesn't work without it
+  * Added chromium/google-chrome policy
+  * dev_getattr_sysfs(sysstat_t) for Debian cron job
+  * Allow sysstat_t to manage it's log files
+  * Allow dpkg_script_t to config all systemd services and get init status
+  * Allow dpkg_script_t to dirmngr_admin
+  * really added systemd_login_list_pid_dirs(system_dbusd_t) (somehow missed
+    this last time)
+  * Allow sshd to chat with systemd via dbus
+  * Allow unconfined_t to restart services
+  * systemd_write_inherited_logind_sessions_pipes(system_dbusd_t)
+  * systemd_dbus_chat_logind(sshd_t)
+  * Allow xend to read vm sysctls
+  * Allow udev_t to manage xenfs_t files for xenstore-read
+  * Allow system_dbusd_t systemd_login_read_pid_files access for
+    /run/systemd/users/* files
+  * Allow systemd_logind_t to stat tmpfs_t filesystems for /run/user
+  * Remove the "genfscon selinuxfs" line from selinux.if in selinux-policy-dev
+    to stop sepolgen-ifgen errors.
+  * Make udev_relabelto_db() include lnk_file relabeling
+  * Allow kernel_t to fs_search_tmpfs, selinux_compute_create_context, and
+    kernel_read_unlabeled_state for booting without unconfined.pp
+  * Allow system_cronjob_t to manage the apt cache
+  * Allow modutils_read_module_config(init_t) and create cgroup_t links for
+    strict config. Allow it to relabel from tmpfs_t symlinks
+  * Allow init_run_all_scripts_domain (initrc_t) the service { status start
+    stop } for all the daemon _initrc_exec_t scripts.
+  * Allow sysadm_r to have domain system_mail_t for strict policy
+  * Allow init_t to relabel device_t symlinks and pstore_t dirs, load kernel
+    modules, manage init_var_run_t sock_files, read /usr, read /dev/urandom,
+    systemd_manage_passwd_run, and domain_read_all_domains_state
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 29 Jun 2014 19:11:45 +1000
+
+refpolicy (2:2.20140421-2) unstable; urgency=medium
+
+  * Fix systemd support
+  * Made init, logging, authlogin, application, userdomain, systemd, dmesg,
+    dpkg, usermanage, libraries, fstools, miscfiles, mount, selinuxutil,
+    storage and sysnetwork be base modules - some of this is needed for
+    systemd, some just makes sense.
+  * Disabled modules anaconda, authbind, kudzu, portage, rhgb, speedtouch
+  * Allow syslogd_t to read /dev/urandom (for systemd)
+  * Change unit files to use .*\.service
+  * Default trans syslogd_tmp_t for name /run/log (for systemd)
+  * Make /var/auth a mountpoint
+  * Allow systemd_tmpfiles_t to relabelto xconsole_device_t
+  * Allow init_t to start and stop service systemd_unit_file_t
+  * Allow udev_t to write to init_t stream sockets for systemctl
+  * Allow syslogd_t to read udev_var_run_t so systemd_journal can get seat data
+  * Allow systemd_logind_t to read udev_var_run_t for seat data
+  * Allow syslogd_t setgid and setgid for systemd_journal
+  * Allow udev_t to read cgroup files for systemd-udevd to read it's own cgroup
+  * Give logrotate_t the systemd_systemctl_domain access to restart daemons
+  * Make transition from unconfined_t to insmod_t for running modutils and
+    remove all unused modutils domains. Make unconfined_t transition to
+    insmod_t, this makes depmod run as insmod_t. Make insmod_t write modules
+    dep files with the correct context.
+  * Allow udev_t to load kernel modules for systemd-udevd
+  * Allow initrc_t to systemd_config_all_services
+  * Allow lvm_t to talk to init_t via unix socket for systemd
+  * Allow allow lvm_t to read sysctl_crypto_t
+  * Allow udev_t to read modules_object_t for systemd-udevd
+  * Allow udev_t to search /run/systemd for systemd-udevd
+  * Allow systemd_tmpfiles_t to relabel man_cache_t
+  * Allow initrc_t to get status of init_t for systemd
+  * Allow udev_t to get initrc_exec_t service status for when udev runs hdparm
+    script
+  * Allow ifconfig_t to load kernel modules
+  * Allow named_t to read vm sysctls
+  * Allow tor_t capabilities chown dac_read_search dac_override fowner
+  * Allow fetchmail_t to manage dirs of type fetchmail_uidl_cache_t
+  * Allow mysqld_t to connect to itself on unix_stream_socket
+  * Allow mysqld_t kernel_read_vm_sysctls for overcommit_memory
+  * Allow sysstat_t read and write access to crond_tmp_t (for cron to capture
+    stdout/stderr).
+  * Allow sysstat_t to read it's own log files and read shell_exec_t
+  * Included file context for /run/kdm.pid
+  * Allow kerneloops_t to read /proc/filesystems
+  * Label /var/cache/dirmngr as dirmngr_var_lib_t
+  * systemd_login_list_pid_dirs(system_dbusd_t)
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 25 Jun 2014 15:38:58 +1000
+
+refpolicy (2:2.20140421-1) unstable; urgency=medium
+
+  * Team upload.
+  * New GIT snapshot of the policy
+    - Drop debian/patches/upstream/*.patch: Applied upstream
+    - Label /etc/locale.alias as locale_t (Closes: #707246)
+    - Allow xdm_t to execute gkeyringd_domains and to transition to them
+    - Label postgresql manpages properly (Closes: #740591)
+    - Allow setfiles_t and restorecond_t to getattr from all fs that support
+      xattr (Closes: #740682)
+  * Refresh debian/modules.conf.default, debian/modules.conf.mls: Start
+    building the shibboleth module
+
+ -- Laurent Bigonville <bigon@debian.org>  Mon, 21 Apr 2014 23:37:53 +0200
+
+refpolicy (2:2.20140311-1) unstable; urgency=medium
+
+  * Team upload.
+  * New upstream release
+  * d/p/u/0001-Properly-label-git-shell-and-other-git-commands-for-.patch:
+    Properly label git commands as bin_t and git-shell as shell_exec_t
+  * d/p/u/0002-Label-usr-sbin-lightdm-as-xdm_exec_t.patch: Properly label
+    lightdm executable as xdm_exec_t (Closes: #739163)
+  * d/p/u/0003-Add-several-fcontext-for-debian-specific-paths-for-n.patch:
+    Properly label ntp initscript and other ntp related files (Closes: #740656)
+
+ -- Laurent Bigonville <bigon@debian.org>  Sat, 15 Mar 2014 09:56:53 +0100
+
+refpolicy (2:2.20140206-1) unstable; urgency=medium
+
+  * Team upload.
+  * New GIT snapshot of the policy
+    - Allow unconfined_u user to enter system_r role again (Closes: #732857)
+    - Allow unconfined user to transition to dpkg_t and transitively to
+      dpkg_script_t (Closes: #707214)
+    - Refresh 0004-init-startpar-initrc_t-gets-attributes-of-dev-dm-0-d.patch
+    - Drop d/p/0005-add-missing-newline.patch,
+      d/p/0006-allow-udev-write-rulesd.patch: Applied upstream
+  * debian/selinux-policy-dev.post{inst,rm}: Call sepolgen-ifgen after
+    selinux-policy-dev installation if SELinux is enabled
+  * debian/selinux-policy-dev.install, debian/rules: Install headers in
+    /usr/share/selinux/devel, there is no differences between default and mls
+    headers, so it's not necessary to install both.
+  * debian/rules, debian/example/Makefile, debian/Makefile.devel: Fix
+    development Makefile to work with new headers location
+  * debian/control: Bump Standards-Version to 3.9.5 (no further changes)
+
+ -- Laurent Bigonville <bigon@debian.org>  Thu, 06 Feb 2014 21:56:55 +0100
+
+refpolicy (2:2.20131214-1) unstable; urgency=low
+
+  * Team upload.
+  [ Laurent Bigonville ]
+  * New GIT snapshot of the policy
+    - Drop all the Debian specific patches, some of the patches have been
+      merged upstream, but the rest was making it really difficult to upgrade
+      the policy to the new upstream versions.
+    - Add block_suspend access vectors (Closes: #722700)
+    - libvirt should now run when compiled with selinux support
+      (Closes: #559356)
+    - Allow smartd daemon to write in /var/lib/smartmontools directory
+      (Closes: #720631)
+    - NetworkManager should now be able to write /run/network/ifstate
+      (Closes: #711083)
+    - Allow dovecot self:process setsched permission (Closes: #716753)
+    - Add denyhosts policy package (Closes: #700403)
+    - deny_ptrace boolean is now gone (Closes: #691284)
+    - Allow fail2ban dac_read_search and dac_override capabilities
+      (Closes: #700326)
+    - irqbalance has now the getsched permission (Closes: #707243)
+  * Refresh debian/modules.conf.* for new release, build all the policy
+    packages as modules now
+  * Drop debian/file_contexts.subs_dist, install upstream one instead
+  * debian/rules: policy/rolemap file is gone
+  * debian/control: Bump {build-}dependencies to the last userspace release
+  * debian/rules: Disable UBAC for the default policy
+  * debian/rules: Build the default policy with UNK_PERMS=allow
+  * debian/control: Add dependency against selinux-utils for selinuxenabled
+  * debian/NEWS: Add some information about the proper way to permanently
+    disable a module
+  * d/p/0004-init-startpar-initrc_t-gets-attributes-of-dev-dm-0-d.patch:
+    Fix FTBFS and allow startpar can getattr of some devices
+  * Add d/p/0005-add-missing-newline.patch: Add missing newline at the end of
+    the file, this is causing weird behaviour, thanks M4
+  * d/p/0006-allow-udev-write-rulesd.patch: Allow udev to write in
+    /etc/udev/rules.d (Closes: #712970)
+
+  [ Mika Pflüger ]
+  * debian/postinst.policy: Rewrite the postinst script for the
+    selinux-policy-* packages to automatically upgrade the running policy.
+    (Closes: #552147)
+  * debian/copyright: Update to machine-readable copyright format.
+  * debian/postrm.policy: Use common postrm script for selinux-policy-*
+    packages.
+
+ -- Laurent Bigonville <bigon@debian.org>  Sun, 15 Dec 2013 22:53:06 +0100
+
+refpolicy (2:2.20110726-13) unstable; urgency=low
+
+  * Team upload.
+  [ Mika Pflüger ]
+  * Allow dhcpc_t to bind to all udp ports (Closes: #707658).
+
+  [ Laurent Bigonville ]
+  * Rework the build system
+  * Compress modules files with bzip2
+  * debian/control:
+    - Bump Standards-Version to 3.9.4 (no further changes)
+    - Drop really old Conflicts
+    - Add a Breaks against selinux-basics (<< 0.5.2~) so we are sure it
+      supports .bz2 compressed modules
+  * debian/source/lintian-overrides: Add an override for
+    maintainer-script-lacks-debhelper-token
+
+ -- Laurent Bigonville <bigon@debian.org>  Fri, 20 Sep 2013 19:18:57 +0200
+
+refpolicy (2:2.20110726-12) unstable; urgency=low
+
+  * Team upload.
+  [ Russel Coker ]
+  * Label ~/.adobe(/.*)? as mozilla_home_t for flash
+  * Label /usr/sbin/opendkim as dkim_milter_exec_t
+  * Label postalias as postfix_master_exec_t for newaliases
+  * Make postfix.pp not depend on unconfined.pp for "strict" configurations
+  * Label port 5546 as dhcpc_port_t and allow dhcpc_t to bind to TCP for
+    client control
+  * Label /usr/lib/kde4/libexec/* and /usr/lib/gvfs/* as bin_t for desktops
+  * Label /run/pm-utils(/.*)? as devicekit_var_run_t not hald_var_run_t
+  * Allow user roles access to mozilla_t classes shm and sem for sharing
+    the sound device
+  * Allow user roles access to mozilla_tmp_t
+  * Label /sbin/xtables-multi (the new iptables)
+  * Allow watchdog_t to read syslog pid files for process watching
+  * Allow lvm_t (systemd-cryptsetup) systemd_manage_passwd_run() access
+  * Allow systemd_passwd_agent_t access to search selinuxfs and write to
+    the console for getting a password for encrypted filesystems
+  * Label /usr/lib/dovecot/auth as dovecot_auth_exec_t.
+    Label /usr/lib/dovecot/dovecot-lda as lda_exec_t
+    Label /usr/lib/dovecot/libdovecot.*\.so.* as lib_t
+    Closes: #690225
+
+ -- Mika Pflüger <debian@mikapflueger.de>  Fri, 30 Nov 2012 00:28:21 +0100
+
+refpolicy (2:2.20110726-11) unstable; urgency=low
+
+  * Team upload
+  [ Mika Pflüger ]
+  * Drop incomplete patch adding debian specific gdm3 locations and
+    cherry-pick Laurent's complete patch from upstream instead. Slightly
+    edit the patch to work around an issue in file context ordering.
+
+ -- Laurent Bigonville <bigon@debian.org>  Sun, 30 Sep 2012 22:43:12 +0200
+
+refpolicy (2:2.20110726-10) unstable; urgency=low
+
+  * Team upload.
+  [ Mika Pflüger ]
+  * xserver.fc: Add debian specific /usr/sbin/gdm3 as a location for gdm3.
+    Closes: #683756
+  * debian/control: Update Vcs-* fields.
+
+  [ Laurent Bigonville ]
+  * d/p/0079-Allow-iptables_t-to-do-module_request.patch: Dropped, the code
+    present in this patch was already present later in the code.
+  * d/p/0048-Alsa-debian-locations.patch: Dropped, changes merged upstream,
+    and was breaking module loading due to duplicate paths (Closes: #686670)
+  * debian/watch: Fix watch file uversionmangle
+
+ -- Laurent Bigonville <bigon@debian.org>  Fri, 07 Sep 2012 17:51:13 +0200
+
+refpolicy (2:2.20110726-9) unstable; urgency=high
+
+  * Enable UBAC as roles aren't useful.  I recommend using only roles user_r
+    and unconfined_r and using UBAC (constraining users from sharing files
+    between identities) where you would previously have used roles.
+  * Made cron jobs run in regular user domains such as unconfined_t and user_t
+    Closes: #679277
+  * Had the wrong timestamp on the last upload, corrected it for the record.
+  * Allow ftpd to create sock_file objects under /var/run for proftpd
+  * Change readahead policy to support memlockd.
+  * Allow devicekit_power_t, devicekit_disk_t, kerneloops_t, and policykit_t
+    to send dbus messages to users.
+  * Grant systemd utilities access to selinuxfs so they can correctly label
+    directories. Closes: #678392
+  * Assigned type consolekit_var_run_t to /var/run/console(/.*)? because it's
+    created and managed by consolekit nowadays.
+  * Created tunable allow_ssh_connect_reserved_ports to allow ssh client to
+    connect to reserved ports.
+  * Correctly label all perdition binaries, give perdition_t dac_override, and
+    allow perdition_t to create it's own pid directories.
+  * Label /etc/dansguardian as squid_etc_t
+  * Allow devicekit_power_t to access acpi device and read udev tables and
+    allow devicekit_disk_t to read udev tables.
+  * Allow sshd_t to write to fifos inherited from systemd
+  * High urgency because we really need to have working cron jobs!!!
+  * Removed the postinst code to upgrade from pre-squeeze packages.
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 30 Jun 2012 19:19:57 +1000
+
+refpolicy (2:2.20110726-8) unstable; urgency=high
+
+  * Allow dbus domains to search cgroup dirs and init_var_run_t
+  * Have init_t transition to devicekit_power_t and devicekit_disk_t for
+    systemd.
+  * Allow user domains to create netlink_kobject_uevent_socket objects
+  * Put dansguardian in squid_t
+  * Fixed error in portslave.te that prevented module insertion
+  * Allow postgrey_t to exec bin_t for perl and self:netlink_route_socket
+    access
+  * Allow dac_override access to arpwatch_t
+  * Add tcsd.pp (for trousers) to the policy packages
+  * Add nut.pp for the nut-server package to the policy packages
+  * Load irqbalance.pp if irqbalance Debian package is installed, same for
+    kerneloops, tcsd.pp/trousers, nut.pp/nut-server,
+    and smartmon.pp/smartmontools.
+  * High urgency because the support for tcsd and nut really needs to be
+    tested (and it's broken badly for those people) and portslave.pp is also
+    badly broken in previous versions.
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 25 Jun 2012 16:37:45 +1000
+
+refpolicy (2:2.20110726-7) unstable; urgency=high
+
+  [Russell Coker]
+  * Got Chromium working!
+  * Allow user_dbusd_t to access /run/console
+  * Got systemd working
+    Closes: #677578
+  * Added policy for dirmngr.
+  * Added support for wide-dhcpv6-client.
+  * Remove all refpolicyerr and almost all refpolicywarn instances, removed all
+    obsolete interfaces and fixed syntax errors.
+    Closes: #678237
+  * Allow all users to run the Postfix mailq command
+  * Lots of little changes.
+  [Mika Pflüger]
+  * Do not ship pyplate.pyc. Closes: #676852
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 21 Jun 2012 23:15:59 +1000
+
+refpolicy (2:2.20110726-6) unstable; urgency=low
+
+  * Added deny_ptrace tunable which some modules depend on
+  * Fixed squid and nrpe policy
+  * Made all necessary changes to allow a KDE login
+    Closes: #677589
+  * Made all necessary changes for a mail server running Postfix, Courier
+    Maildrop, and Dovecot.  Not all mail server configurations will work (MTAs
+    tend to be complex and have lots of interactions) but getting other
+    configurations will be easier now.
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 17 Jun 2012 06:18:01 +0000
+
+refpolicy (2:2.20110726-5) unstable; urgency=high
+
+  * Add systemd support - incomplete.
+    Closes: #660577.  I opened another bug for systemd not working.
+  * Depend on the latest SE Linux libraries
+  * Fix many problems that prevented successful boot, now should be quite
+    functional for servers.
+    Closes: #677579, #613977
+  * Fix djbdns port access.
+    Closes: #620718
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 16 Jun 2012 00:17:13 +1000
+
+refpolicy (2:2.20110726-4) unstable; urgency=low
+  [Russell Coker]
+  * Build and upload based on Laurent and Mika's good work.
+  * Hopefully will have a new version released very soon, but it's good to just
+    upload when there have been significant changes that have no down-side.
+
+  [Laurent Bigonville]
+  * debian/control:
+    - Bump Standards-Version to 3.9.2
+  * Add debian/gbp.conf file
+  * Switch to dpkg-source 3.0 (quilt) format
+    - Split out existing patches
+
+  [Mika Pflüger]
+  * Switch to team maintenance
+  * Update Vcs-* fields (Closes: #660328)
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 10 Jun 2012 12:07:17 +1000
+
+refpolicy (2:2.20110726-3) unstable; urgency=low
+
+  * Label /run/mdadm/map .
+    Closes: #643490
+  * Stop conflicting with ancient "selinux" package.
+    Closes: #576598
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 25 Jan 2012 23:52:15 +1100
+
+refpolicy (2:2.20110726-2) unstable; urgency=low
+
+  * Merged all the patches from 2:0.2.20100524-13.
+  * Allow mozilla_t to search user_home_t for ~/.config/chromium
+  * Allow mozilla_t to create sym links in /tmp
+  * Use a separate default setrans.conf for mls
+  * Allow inetd_t setrlimit access
+  * Allow mozilla_t to create socket files in /tmp, for chromium
+  * Remove the hack for /run etc that was introduced in 2:0.2.20100524-10
+  * Correctly label nrpe.cfg as nrpe_etc_t
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 02 Nov 2011 12:57:17 +1100
+
+refpolicy (2:2.20110726-1) unstable; urgency=low
+
+  * New upstream policy
+  * Built for Wheezy, made it depend on all Wheezy versions.  It won't work
+    on Squeeze and can't be easily backported.
+  * Label /dev/xconsole as xconsole_device_t
+  * Allow syslogd_t capability sys_nice and process:{ getsched setsched }
+  * Allow xconsole_device_t to be associated with device_t filesystems
+  * This version is a bit rough, you can boot unstable in enforcing mode and
+    login via ssh but I won't guarantee any more.
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 31 Oct 2011 21:54:20 +1100
+
+refpolicy (2:0.2.20100524-13) unstable; urgency=low
+
+  * Labeled awffull as webalizer_exec_t.
+  * Removed nx.pp from unstable as it doesn't build with latest utils.
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 15 Sep 2011 11:53:02 +1000
+
+refpolicy (2:0.2.20100524-12) unstable; urgency=low
+
+  * Allow perdition to bind to sieve port, read /dev/urandom, and capabilities
+    chown and fowner.
+  * Allow nrpe_t to manage nagios_var_run_t files.
+  * Change the in_unconfined_r() interface so that postfix_postqueue_t can
+    read and write unconfined_t fifos.
+  * Allow quota_t to load kernel modules.
+
+ -- Russell Coker <russell@coker.com.au>  Tue, 30 Aug 2011 23:10:50 +1000
+
+refpolicy (2:0.2.20100524-11) unstable; urgency=low
+
+  * Allow snmpd to setuid and setgid.
+  * Allow nagios services to connect to mysql servers via tcp and read /etc
+    files for mysql.
+  * Allow nagios_mail_plugin_t to read usr files.
+  * Allow postfix_postqueue_t to use a fd from nagios_mail_plugin_t.
+  * Allow crond_t the sys_resource capability to set resource limits for
+    children.
+  * Allow user_t to manage httpd_user_content_t, also allow httpd_t
+    the same access to httpd_user_content_t sym-links as to files.
+  * Allow gpg_agent_t to create sock_files under ~/.gnupg
+    Allow gpg_pinentry_t to read var_lib_t files for fonts.conf
+  * Allow perdition to authenticate with mysql, read directories of type
+    perdition_etc_t, connect to the pop ports
+  * Allow nagios_checkdisk_plugin_t to getattr all mountpoint dirs, so it
+    can check the root directory of a filesystem.
+
+ -- Russell Coker <russell@coker.com.au>  Fri, 19 Aug 2011 16:36:17 +1000
+
+refpolicy (2:0.2.20100524-10) unstable; urgency=low
+
+  * Label gpgsm as gpg_exec_t
+  * Add policy for /run etc, thanks to Martin Orr <martin@martinorr.name> for
+    working on this, even though we can't use subst now.
+    Closes: #629066, #628039, #626720
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 24 Jul 2011 15:50:23 +1000
+
+refpolicy (2:0.2.20100524-9) unstable; urgency=low
+
+  * Make gnome.pp not be autoloaded and revert some of the gnome stuff from the
+    previous version.  Getting gnome (gconfd) policy to work correctly is too
+    hard for Squeeze.
+  * Allow user_t to talk to xdm_var_run_t sockets so switch user can work.
+  * Allow mailman_mail_t to read /dev/urandom and usr_t files
+  * Allow xenconsoled_t capability sys_tty_config and create unix_dgram_socket
+  * Allow iodine_t to read /proc/filesystems
+  * Allow jabber_t to write it's fifos, process set/getsched, connect to
+    generic tcp ports, and bind to udp ports.
+  * Label /var/lib/sudo as pam_var_run_t
+  * Allow sshd_t to read gitosis files.
+  * Made the gitosis label apply to /srv/gitosis.
+  * Allow webalizer to read usr_t files for geoip database.
+  * Allow user_t and staff_t consolekit_dbus_chat() access so they can
+    determine their session status - necessary to login in KDE sometimes.
+  * Label ~/.gnupg/gpg.conf as user_home_t and allow user_t to list directories
+    of type gpg_secret_t so gpg-agent can start.
+  * Allow gpg_agent_t to launch a user session and send sigchld to xdm_t
+  * Allow user_ssh_agent_t to send sigchld to xdm_t and allow it to run the
+    gpg agent.
+  * Add new paths for chromium-browser to support the version in unstable,
+    needed for backports.
+  * Allow user_mail_t to transition to postfix_master_t for postalias, confined
+    by roles.  Uses domain_system_change_exemption() for user_mail_t via
+    postfix_domtrans_master() which isn't ideal.
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 11 May 2011 11:58:46 +1000
+
+refpolicy (2:0.2.20100524-8) unstable; urgency=low
+
+  * Add tunable user_manage_dos_files which defaults to true
+  * Correctly label /usr/lib/xulrunner-1.9.1/xulrunner-stub
+  * Allow mozilla to create directories under /tmp
+  * Use correct label for /usr/lib/libgconf2-4/gconfd-2 and load gnome.pp on
+    installation if libgconf2-4 is installed
+  * Use correct label for /usr/lib/upower/upowerd
+  * Dontaudit bind_t write attempts to / for lwresd calling access(".", W_OK)
+  * Allow user domains to execute mysqld_exec_t, for KDE
+  * Allow user_dbusd_t to execute gconfd_exec_t in user_gconfd_t.
+  * Label /var/lib/fetchmail as fetchmail_uidl_cache_t and allow fetchmail_t to
+    search /var/lib and manage fetchmail_uidl_cache_t dirs
+  * Allow xm_t to read kernel image files, needed for DomU startup on boot
+  * Allow gpg_agent_t to read etc_t files and sysctl_crypto_t.
+  * Allow network manager to run wpa_cli_exec_t programs.
+
+ -- Russell Coker <russell@coker.com.au>  Fri, 11 Mar 2011 14:28:58 +1100
+
+refpolicy (2:0.2.20100524-7) unstable; urgency=low
+
+  * Allow crontab_t to create a directory of type crontab_tmp_t, necessary to
+    allow crontab -e to work
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 13 Jan 2011 21:32:24 +1100
+
+refpolicy (2:0.2.20100524-6) unstable; urgency=low
+
+  * Allow mysqld_safe_t to send messages to syslogd
+  * Allow mysqld_t to run shell scripts (shell_exec_t and bin_t)
+  * Fixed a bug in the previous release that stopped MTAs from talking to
+    the dkim-milter, the .if file had the wrong type.
+  * Made it load ipsec.pp if ipsec-tools or racoon is installed
+  * Include policy for the iodine IP over DNS tunnel daemon
+  * Allow saslauthd_t to talk to mysqld via TCP
+  * Allow freshclam_t to read proc_t files
+  * Allow postfix_local_t to write to mail_spool_t files for locking
+  * Allow system_mail_t (sendmail) to get read/write access to crond_tmp_t
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 13 Jan 2011 12:41:00 +1100
+
+refpolicy (2:0.2.20100524-5) unstable; urgency=low
+
+  * Label /usr/bin/tcsh as shell_exec_t
+  * Domain trans from unconfined_t to depmod_t
+  * Don't include /usr/lib/dovecot/deliver in dovecot.fc/te as it's in lda.pp
+  * Don't include /usr/sbin/spamass-milter and /var/spool/postfix/spamass in
+    spamassassin.fc as they are in milter.fc
+  * Label /var/run/spamass as spamass_milter_data_t
+  * Allow lvm_t rw access to unconfined_t semaphores.
+  * Added in_unconfined_r() interface and made postfix user domains use it
+    so they can be in the role unconfined_r.  Ugly but no better solution at
+    this time
+    Closes: #592038 #599053
+  * Include Chromium policy in mozilla.pp
+  * Allow sshd getcap and setcap access
+  * Correctly label ~/.xsession-errors
+  * Allow spamc_t to be in system_r and allow it access to netlink_route_socket
+  * Allow lda_t to talk to the Courier Authdaemon - for courier maildrop
+  * Allow fetchmail_t to read usr_t for certificates and to create /tmp files
+  * Allow cron jobs to write to crond_tmp_t
+  * Label courier socket files as courier_var_run_t
+  * Run /usr/sbin/authdaemond as courier_authdaemon_t
+  * Allow dkim_milter_t to read proc_t files and create /tmp files
+  * Allow dovecot domains to search dovecot_etc_t dirs
+  * Allow dovecot_auth_t to talk to mysqld via TCP and read /etc/mysql/my.cnf
+  * Label /etc/network/run as etc_t
+  * Label X as spamass_milter_var_run_t
+  * Remove unconfined_exec_t label from /usr/bin/qemu
+    Closes: #601686
+  * Label /usr/lib/apache2/mpm-*/apache2 as httpd_exec_t
+    Closes: #608291
+  * Allow nagios.pp to be installed without apache.pp
+    Closes: #587596
+  * Removed amavis.pp because it doesn't work and it's functionality is covered
+    by clamav.pp
+    Closes: #559860
+  * Allow mono_t to be in role unconfined_r
+    Closes: #540143
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 08 Jan 2011 14:13:43 +1100
+
+refpolicy (2:0.2.20100524-4) unstable; urgency=low
+
+  * Label /dev/vd* as fixed_disk_device_t, closes: #589997
+  * Remove mcskillall and mcsptraceall from unconfined_t, the sysadmin should
+    have unconfined_t:SystemLow-SystemHigh.
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 26 Jul 2010 11:18:00 +1000
+
+refpolicy (2:0.2.20100524-3) unstable; urgency=low
+
+  * Give freshclam_t and clamd_t the same access WRT execmem.
+  * Install lvm.pp when dmsetup is installed.
+  * Add label for /usr/lib/udisks/udisks-daemon .
+  * Made devicekit.pp and ricci.pp not depend on consoletype.pp and don't
+    build consoletype.
+  * label /usr/lib/udisks/.* as bin_t
+  * label /etc/kde4 the same way as /etc/kde3.
+  * Escape the . in /etc/init.d/mount...
+  * Allow insmod_t the capability sys_admin.
+  * Label all of /etc/network/run/* as etc_runtime_t and allow udev_t to manage
+    such files.
+  * Label /etc/network/if-(up|down).d/postfix as initrc_exec_t so that udev
+    can reload Postfix and push the queue.
+  * Label /usr/lib/ConsoleKit(/.*)? as bin_t to avoid an error message on
+    graphical login.
+  * On initial install load module policykit.pp when policykit-1 is installed.
+  * label /lib/init/rw(/.*)? as var_run_t.
+  * label /var/run/xauth as xdm_var_run_t.
+  * label /var/run/motd as initrc_var_run_t.
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 25 Jul 2010 09:39:00 +1000
+
+refpolicy (2:0.2.20100524-2) unstable; urgency=low
+
+  * Include tmpreaper in base policy as mountnfs-bootclean.sh and
+    mountall-bootclean.sh need to run as tmpreaper_t.
+  * Added a new mcsdeleteall attribute for tmpreaper_t so that it can
+    delete files and directories regardless of mcs level.
+  * Allow perdition netlink_route_socket access.
+  * Allow nrpe_t to execute sudo and search /var/spool
+    also don't audit capability sys_resource.
+  * Allow postfix_local_t to run sendmail for programs like vacation
+  * Make the milter module be loaded if the milter-greylist or spamass-milter
+    package is installed.  Make spamassassin policy optional when using the
+    milter module.
+  * Added a bunch of fixes from git mostly trivial stuff but also allowed
+    bootloader_t to load modules, allowed kismet_t to search home directories,
+  * Don't allow cron daemon to search /var/lib/logrotate.
+  * Fixed a typo in gitosis.if
+  * Commented out the genfscon line in selinux.if for the includes directory,
+    now sepolgen-ifgen works without error.
+
+ -- Russell Coker <russell@coker.com.au>  Fri,  9 Jul 2010 09:47:00 +1000
+
+refpolicy (2:0.2.20100524-1) unstable; urgency=low
+
+  * New Upstream release.  This version has had a good deal of testing for
+    server use but almost no testing for desktop use.  The usual "Unstable"
+    disclaimers apply.
+
+  * Disable UBAC - see http://etbe.coker.com.au/2010/05/26/ubac-selinux-debian/
+  * Allow mount_t to read sysfs_t.
+  * Allow lvm_t to create semaphores.
+  * Allow mount_t and setfiles_t to read/write device_t chr_file.
+  * Allow udev to read sym-links in it's config directory.
+  * Allow vbetool_t to read inotify directories.
+  * Allow gpm_t self signull and signal access.
+
+ -- Russell Coker <russell@coker.com.au>  Tue, 29 Jun 2010 10:42:00 +1000
+
+refpolicy (2:0.2.20091117-3) unstable; urgency=low
+
+  * label Google Chrome as unconfined_execmem_exec_t
+  * Change the apache_content_template() macro to not define the type
+    httpd_$1_script_exec_t, now the caller must unconditionally define it and
+    can therefore use it in it's .fc file without making a .fc dependency.
+  * Allow setrans_t to read proc_t files.
+  * Allow pppd to load modules.
+  * Allow watchdog_t to read/write /dev/watchdog
+  * Allow rpcd_t getcap and setcap access.
+  * Allow insmod_t to mount a rpc_pipefs_t filesystem.
+  * Correctly label kdm.log.* pm-*log* aptitude*
+  * Allow consolekit_t to access pam console data.
+  * Correctly label consolekit scripts
+  * Allow mount_t to set the scheduling for kernel threads.
+
+ -- Russell Coker <russell@coker.com.au>  Tue, 18 May 2010 19:06:24 +1000
+
+refpolicy (2:0.2.20091117-2) unstable; urgency=low
+
+  * Label /etc/gdm/Xsession, /etc/gdm/PostSession/* and /etc/gdm/PreSession/*
+    as xsession_exec_t.
+  * Label /usr/lib/dbus-1.0/dbus-daemon-launch-helper as dbusd_exec_t.
+  * Allow syslogd_t to read/write access to xconsole_device_t.
+  * Allow system_dbusd_t list access to inotifyfs.
+  * Allow udev to manage symlinks under /dev
+  * Treat devtmpfs the same way as tmpfs.
+  * Changed upstream to http://oss.tresys.com/projects/refpolicy/wiki/DownloadRelease
+  * Allow iptables_t, insmod_t and mount_t to do module_request
+  * Use lib32 instead of lib64
+    Closes: #569297
+  * Make manage_lnk_file_perms allow write access for setting the timestamp.
+  * Use filesystem transitions for hugetlbfs_t.
+  * Label xenfs_t and allow xend etc to use it.
+  * Use lda_t for mail local delivery
+  * Allow udev to manage xenfs_t files, to write to etc_runtime_t (for ifstate),
+    and to load modules.
+  * Allow ifconfig to load modules.
+  * Made auth_domtrans_chk_passwd() specify dontaudit for shadow_t file open.
+
+ -- Russell Coker <russell@coker.com.au>  Mon, 22 Feb 2010 07:58:07 +1100
 
 refpolicy (2:0.2.20091117-1) unstable; urgency=low
 

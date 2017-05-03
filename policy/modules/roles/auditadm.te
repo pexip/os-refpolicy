@@ -1,5 +1,4 @@
-
-policy_module(auditadm, 2.1.0)
+policy_module(auditadm, 2.2.0)
 
 ########################################
 #
@@ -7,7 +6,7 @@ policy_module(auditadm, 2.1.0)
 #
 
 role auditadm_r;
-
+role system_r;
 userdom_unpriv_user_template(auditadm)
 
 ########################################
@@ -61,3 +60,6 @@ optional_policy(`
 	sysadm_role_change(auditadm_r)
 ')
 
+optional_policy(`
+	vlock_run(auditadm_t, auditadm_r)
+')
