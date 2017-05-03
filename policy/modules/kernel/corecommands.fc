@@ -65,6 +65,11 @@ ifdef(`distro_redhat',`
 
 /etc/netplug\.d(/.*)? 	 		gen_context(system_u:object_r:bin_t,s0)
 
+/etc/network/if-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
+/etc/network/if-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
+/etc/network/if-pre-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
+/etc/network/if-port-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
+
 /etc/ppp/ip-down\..*		--	gen_context(system_u:object_r:bin_t,s0)
 /etc/ppp/ip-up\..*		--	gen_context(system_u:object_r:bin_t,s0)
 /etc/ppp/ipv6-up\..*		--	gen_context(system_u:object_r:bin_t,s0)

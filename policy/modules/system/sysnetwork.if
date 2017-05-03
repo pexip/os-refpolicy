@@ -310,6 +310,25 @@ interface(`sysnet_etc_filetrans_config',`
 
 #######################################
 ## <summary>
+##     Create, read, write, and delete network state files.
+## </summary>
+## <param name="domain">
+##     <summary>
+##     The type of the process performing this action.
+##     </summary>
+## </param>
+#
+interface(`sysnet_manage_network_state',`
+	gen_require(`
+		type network_var_run_t;
+	')
+
+	manage_files_pattern($1, network_var_run_t, network_var_run_t)
+	manage_dirs_pattern($1, network_var_run_t, network_var_run_t)
+')
+
+#######################################
+## <summary>
 ##	Create, read, write, and delete network config files.
 ## </summary>
 ## <param name="domain">
