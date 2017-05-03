@@ -1,0 +1,66 @@
+diff --git a/policy/booleans.conf b/policy/booleans.conf
+index f4c5052..143221c 100644
+--- a/policy/booleans.conf
++++ b/policy/booleans.conf
+@@ -1134,7 +1134,7 @@ authlogin_nsswitch_use_ldap = false
+ #
+ # Enable support for upstart as the init program.
+ # 
+-init_upstart = false
++init_upstart = true
+ 
+ #
+ # Allow racoon to read shadow
+diff --git a/policy/modules/admin/usermanage.fc b/policy/modules/admin/usermanage.fc
+index 1184395..f4b9151 100644
+--- a/policy/modules/admin/usermanage.fc
++++ b/policy/modules/admin/usermanage.fc
+@@ -27,7 +27,9 @@ ifdef(`distro_debian',`
+ /usr/sbin/pwconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/sbin/pwunconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/sbin/useradd	--	gen_context(system_u:object_r:useradd_exec_t,s0)
++/usr/sbin/adduser	--	gen_context(system_u:object_r:useradd_exec_t,s0)
+ /usr/sbin/userdel	--	gen_context(system_u:object_r:useradd_exec_t,s0)
++/usr/sbin/deluser	--	gen_context(system_u:object_r:useradd_exec_t,s0)
+ /usr/sbin/usermod	--	gen_context(system_u:object_r:useradd_exec_t,s0)
+ /usr/sbin/vigr		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+ /usr/sbin/vipw		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
+diff --git a/policy/modules/kernel/corecommands.fc b/policy/modules/kernel/corecommands.fc
+index 096c4fd..1608920 100644
+--- a/policy/modules/kernel/corecommands.fc
++++ b/policy/modules/kernel/corecommands.fc
+@@ -82,6 +82,11 @@ ifdef(`distro_redhat',`
+ 
+ /etc/netplug\.d(/.*)? 	 		gen_context(system_u:object_r:bin_t,s0)
+ 
++/etc/network/if-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
++/etc/network/if-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
++/etc/network/if-pre-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
++/etc/network/if-port-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
++
+ /etc/PackageKit/events(/.*)?		gen_context(system_u:object_r:bin_t,s0)
+ 
+ /etc/pki/tls/certs/make-dummy-cert -- 	gen_context(system_u:object_r:bin_t,s0)
+diff --git a/policy/modules/kernel/filesystem.te b/policy/modules/kernel/filesystem.te
+index cf04fb7..4183315 100644
+--- a/policy/modules/kernel/filesystem.te
++++ b/policy/modules/kernel/filesystem.te
+@@ -189,6 +189,7 @@ files_poly_parent(tmpfs_t)
+ fs_use_trans mqueue gen_context(system_u:object_r:tmpfs_t,s0);
+ fs_use_trans shm gen_context(system_u:object_r:tmpfs_t,s0);
+ fs_use_trans tmpfs gen_context(system_u:object_r:tmpfs_t,s0);
++fs_use_trans devtmpfs gen_context(system_u:object_r:tmpfs_t,s0);
+ 
+ allow tmpfs_t noxattrfs:filesystem associate;
+ 
+diff --git a/policy/modules/system/mount.fc b/policy/modules/system/mount.fc
+index 5f4f548..6a68752 100644
+--- a/policy/modules/system/mount.fc
++++ b/policy/modules/system/mount.fc
+@@ -7,5 +7,6 @@
+ /sbin/zpool			--	gen_context(system_u:object_r:mount_exec_t,s0)
+ 
+ /usr/bin/fusermount		--	gen_context(system_u:object_r:mount_exec_t,s0)
++/sbin/mountall			--	gen_context(system_u:object_r:mount_exec_t,s0)
+ 
+ /var/run/mount(/.*)?			gen_context(system_u:object_r:mount_var_run_t,s0)

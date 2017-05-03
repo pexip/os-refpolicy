@@ -82,11 +82,6 @@ ifdef(`distro_redhat',`
 
 /etc/netplug\.d(/.*)? 	 		gen_context(system_u:object_r:bin_t,s0)
 
-/etc/network/if-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-/etc/network/if-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-/etc/network/if-pre-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-/etc/network/if-port-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-
 /etc/PackageKit/events(/.*)?		gen_context(system_u:object_r:bin_t,s0)
 
 /etc/pki/tls/certs/make-dummy-cert -- 	gen_context(system_u:object_r:bin_t,s0)
