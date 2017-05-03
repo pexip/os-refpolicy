@@ -41,18 +41,6 @@ index 096c4fd..1608920 100644
  /etc/PackageKit/events(/.*)?		gen_context(system_u:object_r:bin_t,s0)
  
  /etc/pki/tls/certs/make-dummy-cert -- 	gen_context(system_u:object_r:bin_t,s0)
-diff --git a/policy/modules/kernel/filesystem.te b/policy/modules/kernel/filesystem.te
-index cf04fb7..4183315 100644
---- a/policy/modules/kernel/filesystem.te
-+++ b/policy/modules/kernel/filesystem.te
-@@ -189,6 +189,7 @@ files_poly_parent(tmpfs_t)
- fs_use_trans mqueue gen_context(system_u:object_r:tmpfs_t,s0);
- fs_use_trans shm gen_context(system_u:object_r:tmpfs_t,s0);
- fs_use_trans tmpfs gen_context(system_u:object_r:tmpfs_t,s0);
-+fs_use_trans devtmpfs gen_context(system_u:object_r:tmpfs_t,s0);
- 
- allow tmpfs_t noxattrfs:filesystem associate;
- 
 diff --git a/policy/modules/system/mount.fc b/policy/modules/system/mount.fc
 index 5f4f548..6a68752 100644
 --- a/policy/modules/system/mount.fc
