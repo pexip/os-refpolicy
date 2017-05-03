@@ -1,3 +1,9 @@
+refpolicy (2:2.20140421-16pexip1) pexip; urgency=medium
+
+  * Prepare Pexip packaging
+
+ -- John-Mark Bell <jmb@pexip.com>  Wed, 03 May 2017 20:32:41 +0100
+
 refpolicy (2:2.20140421-16) jessie; urgency=medium
 
   * New mon policy with separate domains for local and network tests.
