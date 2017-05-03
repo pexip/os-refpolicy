@@ -4,9 +4,10 @@ VCS-Browser: http://git.debian.org/?p=users/srivasta/debian/refpolicy.git;a=summ
 Priority: optional
 Section: admin
 Homepage: http://serefpolicy.sourceforge.net/
-Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
+Maintainer: Pexip AS <packaging@pexip.com>
+XSBC-Pexip-Original-Maintainer: Ubuntu MOTU Developers <ubuntu-motu@lists.ubuntu.com>
 XSBC-Original-Maintainer: Russell Coker <russell@coker.com.au>
-Uploaders: Erich Schubert <erich@debian.org>, Manoj Srivastava <srivasta@debian.org>
+XSBC-Pexip-Original-Uploaders: Erich Schubert <erich@debian.org>, Manoj Srivastava <srivasta@debian.org>
 Standards-Version: 3.8.3.0
 Build-Depends-Indep: policycoreutils (>= 2.0.55), checkpolicy (>= 2.0.19),
                      python, m4, bzip2, gawk, libsepol1 (>=2.0.36)
