@@ -1,16 +1,3 @@
-diff --git a/policy/booleans.conf b/policy/booleans.conf
-index f4c5052..143221c 100644
---- a/policy/booleans.conf
-+++ b/policy/booleans.conf
-@@ -1134,7 +1134,7 @@ authlogin_nsswitch_use_ldap = false
- #
- # Enable support for upstart as the init program.
- # 
--init_upstart = false
-+init_upstart = true
- 
- #
- # Allow racoon to read shadow
 diff --git a/policy/modules/admin/usermanage.fc b/policy/modules/admin/usermanage.fc
 index 1184395..f4b9151 100644
 --- a/policy/modules/admin/usermanage.fc
@@ -41,14 +28,3 @@ index 096c4fd..1608920 100644
  /etc/PackageKit/events(/.*)?		gen_context(system_u:object_r:bin_t,s0)
  
  /etc/pki/tls/certs/make-dummy-cert -- 	gen_context(system_u:object_r:bin_t,s0)
-diff --git a/policy/modules/system/mount.fc b/policy/modules/system/mount.fc
-index 5f4f548..6a68752 100644
---- a/policy/modules/system/mount.fc
-+++ b/policy/modules/system/mount.fc
-@@ -7,5 +7,6 @@
- /sbin/zpool			--	gen_context(system_u:object_r:mount_exec_t,s0)
- 
- /usr/bin/fusermount		--	gen_context(system_u:object_r:mount_exec_t,s0)
-+/sbin/mountall			--	gen_context(system_u:object_r:mount_exec_t,s0)
- 
- /var/run/mount(/.*)?			gen_context(system_u:object_r:mount_var_run_t,s0)
