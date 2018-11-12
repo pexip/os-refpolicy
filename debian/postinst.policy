@@ -25,6 +25,15 @@ notdefault="abrt certwatch clockspeed clogd cmirrord cobbler consoletype cyphesi
 
 case "$1" in
     configure)
+	if LC_ALL=C dpkg --compare-versions "$2" lt-nl "2:2.20161023.1-9pexip1~"; then
+	    rm -f /etc/selinux/${flavour}/contexts/files/file_contexts.local
+	    rm -f /etc/selinux/${flavour}/contexts/files/file_contexts.local.bin
+	    rm -f /etc/selinux/${flavour}/contexts/netfilter_contexts
+	    rm -fr /etc/selinux/${flavour}/modules
+	    rm -f /etc/selinux/${flavour}/policy/policy.29
+	    rm -fr /etc/selinux/${flavour}/users
+	fi
+
 	echo -n "Updating selinux ${flavour} policy (this step might take a moment)..."
 
 	# list all the modules that are already installed with our priority

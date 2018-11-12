@@ -1,3 +1,9 @@
+refpolicy (2:2.20161023.1-9pexip2) pexip; urgency=medium
+
+  * Remove old policy on upgrade
+
+ -- John-Mark Bell <jmb@pexip.com>  Mon, 12 Nov 2018 14:52:57 +0000
+
 refpolicy (2:2.20161023.1-9pexip1) pexip; urgency=medium
 
   * Migrate to Stretch
