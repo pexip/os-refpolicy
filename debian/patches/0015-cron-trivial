@@ -1,0 +1,255 @@
+Index: refpolicy-2.20190201/policy/modules/services/cron.if
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/services/cron.if
++++ refpolicy-2.20190201/policy/modules/services/cron.if
+@@ -51,15 +51,16 @@ template(`cron_common_crontab_template',
+ ## </param>
+ ## <param name="domain">
+ ##	<summary>
+-##	User domain for the role.
++##	stem of domain for the role.
+ ##	</summary>
+ ## </param>
+ ## <rolecap/>
+ #
+ interface(`cron_role',`
+ 	gen_require(`
+-		type cronjob_t, crontab_t, crontab_exec_t;
+-		type user_cron_spool_t, crond_t;
++		type cronjob_t;
++		type crontab_exec_t, crond_t;
++		type crontab_t, user_cron_spool_t;
+ 		bool cron_userdomain_transition;
+ 	')
+ 
+@@ -68,47 +69,48 @@ interface(`cron_role',`
+ 	# Declarations
+ 	#
+ 
+-	role $1 types { cronjob_t crontab_t };
++	role $1 types { cronjob_t };
++	role $1 types { crontab_t };
+ 
+ 	##############################
+ 	#
+ 	# Local policy
+ 	#
+ 
+-	domtrans_pattern($2, crontab_exec_t, crontab_t)
++	domtrans_pattern($2_t, crontab_exec_t, crontab_t)
+ 
+-	dontaudit crond_t $2:process { noatsecure siginh rlimitinh };
+-	allow $2 crond_t:process sigchld;
++	dontaudit crond_t $2_t:process { noatsecure siginh rlimitinh };
++	allow $2_t crond_t:process sigchld;
+ 
+-	allow $2 user_cron_spool_t:file { getattr read write ioctl };
++	allow $2_t user_cron_spool_t:file { getattr read write ioctl };
+ 
+-	allow $2 crontab_t:process { ptrace signal_perms };
+-	ps_process_pattern($2, crontab_t)
++	allow $2_t crontab_t:process { ptrace signal_perms };
++	ps_process_pattern($2_t, crontab_t)
+ 
+ 	corecmd_exec_bin(crontab_t)
+ 	corecmd_exec_shell(crontab_t)
+ 
+ 	tunable_policy(`cron_userdomain_transition',`
+-		allow crond_t $2:process transition;
+-		allow crond_t $2:fd use;
+-		allow crond_t $2:key manage_key_perms;
++		allow crond_t $2_t:process transition;
++		allow crond_t $2_t:fd use;
++		allow crond_t $2_t:key manage_key_perms;
+ 
+-		allow $2 user_cron_spool_t:file entrypoint;
++		allow $2_t user_cron_spool_t:file entrypoint;
+ 
+-		allow $2 crond_t:fifo_file rw_fifo_file_perms;
++		allow $2_t crond_t:fifo_file rw_fifo_file_perms;
+ 
+-		allow $2 cronjob_t:process { ptrace signal_perms };
+-		ps_process_pattern($2, cronjob_t)
++		allow $2_t cronjob_t:process { ptrace signal_perms };
++		ps_process_pattern($2_t, cronjob_t)
+ 	',`
+-		dontaudit crond_t $2:process transition;
+-		dontaudit crond_t $2:fd use;
+-		dontaudit crond_t $2:key manage_key_perms;
++		dontaudit crond_t $2_t:process transition;
++		dontaudit crond_t $2_t:fd use;
++		dontaudit crond_t $2_t:key manage_key_perms;
+ 
+-		dontaudit $2 user_cron_spool_t:file entrypoint;
++		dontaudit $2_t user_cron_spool_t:file entrypoint;
+ 
+-		dontaudit $2 crond_t:fifo_file rw_fifo_file_perms;
++		dontaudit $2_t crond_t:fifo_file rw_fifo_file_perms;
+ 
+-		dontaudit $2 cronjob_t:process { ptrace signal_perms };
++		dontaudit $2_t cronjob_t:process { ptrace signal_perms };
+ 	')
+ 
+ 	optional_policy(`
+@@ -118,7 +120,7 @@ interface(`cron_role',`
+ 
+ 		dbus_stub(cronjob_t)
+ 
+-		allow cronjob_t $2:dbus send_msg;
++		allow cronjob_t $2_t:dbus send_msg;
+ 	')
+ ')
+ 
+@@ -878,6 +880,24 @@ interface(`cron_dontaudit_append_system_
+ ')
+ 
+ ########################################
++## <summary>
++##	allow appending temporary system cron job files.
++## </summary>
++## <param name="domain">
++##	<summary>
++##	Domain to allow.
++##	</summary>
++## </param>
++#
++interface(`cron_append_system_job_tmp_files',`
++	gen_require(`
++		type system_cronjob_tmp_t;
++	')
++
++	allow $1 system_cronjob_tmp_t:file append_file_perms;
++')
++
++########################################
+ ## <summary>
+ ##	Read and write to inherited system cron job temporary files.
+ ## </summary>
+Index: refpolicy-2.20190201/policy/modules/roles/staff.te
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/roles/staff.te
++++ refpolicy-2.20190201/policy/modules/roles/staff.te
+@@ -103,7 +103,7 @@ ifndef(`distro_redhat',`
+ 	')
+ 
+ 	optional_policy(`
+-		cron_role(staff_r, staff_t)
++		cron_role(staff_r, staff)
+ 	')
+ 
+ 	optional_policy(`
+Index: refpolicy-2.20190201/policy/modules/roles/unprivuser.te
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/roles/unprivuser.te
++++ refpolicy-2.20190201/policy/modules/roles/unprivuser.te
+@@ -79,7 +79,7 @@ ifndef(`distro_redhat',`
+ 	')
+ 
+ 	optional_policy(`
+-		cron_role(user_r, user_t)
++		cron_role(user_r, user)
+ 	')
+ 
+ 	optional_policy(`
+Index: refpolicy-2.20190201/policy/modules/system/unconfined.te
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/system/unconfined.te
++++ refpolicy-2.20190201/policy/modules/system/unconfined.te
+@@ -89,7 +89,7 @@ optional_policy(`
+ ')
+ 
+ optional_policy(`
+-	cron_unconfined_role(unconfined_r, unconfined_t)
++	cron_role(unconfined_r, unconfined)
+ ')
+ 
+ optional_policy(`
+Index: refpolicy-2.20190201/policy/modules/services/cron.te
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/services/cron.te
++++ refpolicy-2.20190201/policy/modules/services/cron.te
+@@ -442,6 +442,8 @@ optional_policy(`
+ 	init_dbus_chat(system_cronjob_t)
+ 	systemd_dbus_chat_logind(system_cronjob_t)
+ 	systemd_write_inherited_logind_sessions_pipes(system_cronjob_t)
++	# for runuser
++	init_search_keys(system_cronjob_t)
+ 	# so cron jobs can restart daemons
+ 	init_stream_connect(system_cronjob_t)
+ 	init_manage_script_service(system_cronjob_t)
+@@ -518,6 +520,7 @@ corenet_udp_sendrecv_generic_node(system
+ corenet_tcp_sendrecv_all_ports(system_cronjob_t)
+ corenet_udp_sendrecv_all_ports(system_cronjob_t)
+ corenet_udp_bind_generic_node(system_cronjob_t)
++corenet_tcp_connect_tor_port(system_cronjob_t)
+ 
+ dev_getattr_all_blk_files(system_cronjob_t)
+ dev_getattr_all_chr_files(system_cronjob_t)
+@@ -568,6 +571,7 @@ logging_manage_generic_logs(system_cronj
+ logging_send_audit_msgs(system_cronjob_t)
+ logging_send_syslog_msg(system_cronjob_t)
+ 
++miscfiles_read_generic_certs(system_cronjob_t)
+ miscfiles_read_localization(system_cronjob_t)
+ 
+ seutil_read_config(system_cronjob_t)
+@@ -678,10 +682,16 @@ optional_policy(`
+ ')
+ 
+ optional_policy(`
++	ntp_read_config(system_cronjob_t)
++')
++
++optional_policy(`
+ 	userdom_user_home_dir_filetrans_user_home_content(system_cronjob_t, { dir file lnk_file fifo_file sock_file })
+ 
+ 	# for gpg-connect-agent to access /run/user/0
+ 	userdom_manage_user_runtime_dirs(system_cronjob_t)
++	# for /run/user/0/gnupg
++	userdom_manage_user_tmp_dirs(system_cronjob_t)
+ ')
+ 
+ ########################################
+Index: refpolicy-2.20190201/policy/modules/system/init.if
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/system/init.if
++++ refpolicy-2.20190201/policy/modules/system/init.if
+@@ -3204,3 +3204,21 @@ interface(`init_getrlimit',`
+ 
+ 	allow $1 init_t:process getrlimit;
+ ')
++
++########################################
++## <summary>
++##      Allow searching init_t keys
++## </summary>
++## <param name="domain">
++##      <summary>
++##      Source domain
++##      </summary>
++## </param>
++#
++interface(`init_search_keys',`
++	gen_require(`
++		type init_t;
++	')
++
++	allow $1 init_t:key search;
++')
+Index: refpolicy-2.20190201/policy/modules/services/mta.te
+===================================================================
+--- refpolicy-2.20190201.orig/policy/modules/services/mta.te
++++ refpolicy-2.20190201/policy/modules/services/mta.te
+@@ -292,7 +292,12 @@ optional_policy(`
+ 	userdom_dontaudit_use_user_ptys(system_mail_t)
+ 
+ 	optional_policy(`
++ifdef(`hide_broken_symptoms',`
++		# anacron on Debian gives empty email if this is not permitted
++		cron_append_system_job_tmp_files(system_mail_t)
++', `
+ 		cron_dontaudit_append_system_job_tmp_files(system_mail_t)
++')
+ 	')
+ ')
+ 
