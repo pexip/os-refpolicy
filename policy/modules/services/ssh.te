@@ -1,4 +1,4 @@
-policy_module(ssh, 2.8.0)
+policy_module(ssh, 2.12.0)
 
 ########################################
 #
@@ -99,10 +99,11 @@ ifdef(`distro_debian',`
 # SSH client local policy
 #
 
-allow ssh_t self:capability { setuid setgid dac_override dac_read_search };
-allow ssh_t self:process ~{ ptrace setcurrent setexec setfscreate setrlimit execmem execstack execheap };
+allow ssh_t self:capability { dac_override dac_read_search setgid setuid };
+allow ssh_t self:process { transition signal_perms getsched setsched getsession getpgid setpgid getcap setcap share getattr noatsecure siginh rlimitinh dyntransition setkeycreate setsockcreate getrlimit };
 allow ssh_t self:fd use;
 allow ssh_t self:fifo_file rw_fifo_file_perms;
+allow ssh_t self:key manage_key_perms;
 allow ssh_t self:unix_dgram_socket { create_socket_perms sendto };
 allow ssh_t self:unix_stream_socket { create_stream_socket_perms connectto };
 allow ssh_t self:shm create_shm_perms;
@@ -155,6 +156,7 @@ corenet_tcp_connect_ssh_port(ssh_t)
 corenet_sendrecv_ssh_client_packets(ssh_t)
 
 dev_read_urand(ssh_t)
+dev_dontaudit_read_rand(ssh_t)
 
 fs_getattr_all_fs(ssh_t)
 fs_search_auto_mountpoints(ssh_t)
@@ -176,6 +178,7 @@ logging_read_generic_logs(ssh_t)
 
 auth_use_nsswitch(ssh_t)
 
+miscfiles_read_generic_certs(ssh_t)
 miscfiles_read_localization(ssh_t)
 
 seutil_read_config(ssh_t)
@@ -188,7 +191,7 @@ userdom_use_user_terminals(ssh_t)
 userdom_read_user_tmp_files(ssh_t)
 
 tunable_policy(`allow_ssh_keysign',`
-	domain_auto_trans(ssh_t, ssh_keysign_exec_t, ssh_keysign_t)
+	domain_auto_transition_pattern(ssh_t, ssh_keysign_exec_t, ssh_keysign_t)
 	allow ssh_keysign_t ssh_t:fd use;
 	allow ssh_keysign_t ssh_t:process sigchld;
 	allow ssh_keysign_t ssh_t:fifo_file rw_file_perms;
@@ -246,6 +249,9 @@ optional_policy(`
 # sshd_t is the domain for the sshd program.
 #
 
+# for /run/user/UID/bus access, probably pam_systemd.so
+allow sshd_t self:capability dac_read_search;
+
 # so a tunnel can point to another ssh tunnel
 allow sshd_t self:netlink_route_socket r_netlink_socket_perms;
 allow sshd_t self:key { search link write };
@@ -273,6 +279,7 @@ ifdef(`distro_debian',`
 ')
 
 ifdef(`init_systemd',`
+	init_dbus_chat(sshd_t)
 	systemd_dbus_chat_logind(sshd_t)
 	init_rw_stream_sockets(sshd_t)
 ')
@@ -317,11 +324,17 @@ optional_policy(`
 ')
 
 optional_policy(`
+	systemd_write_inherited_logind_sessions_pipes(sshd_t)
+	systemd_dbus_chat_logind(sshd_t)
+')
+
+optional_policy(`
 	unconfined_shell_domtrans(sshd_t)
 ')
 
 optional_policy(`
 	xserver_domtrans_xauth(sshd_t)
+	xserver_link_xdm_keys(sshd_t)
 ')
 
 ########################################
@@ -346,6 +359,7 @@ fs_search_auto_mountpoints(ssh_keygen_t)
 
 dev_read_sysfs(ssh_keygen_t)
 dev_read_urand(ssh_keygen_t)
+dev_dontaudit_read_rand(ssh_keygen_t)
 
 term_dontaudit_use_console(ssh_keygen_t)
 
