@@ -1,3 +1,9 @@
+refpolicy (2:2.20190201-2pexip1) pexip; urgency=medium
+
+  * Migrate to Buster
+
+ -- Vincent Sanders <vince@pexip.com>  Sun, 08 Mar 2020 14:06:53 +0000
+
 refpolicy (2:2.20190201-2) unstable; urgency=medium
 
   * Lots of little changes, many for strict configuration.
