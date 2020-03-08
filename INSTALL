@@ -1,9 +1,9 @@
 Reference Policy has the following build requirements:
-	* libsepol 2.1.4
-	* libsemanage 2.1.6
-	* checkpolicy 2.1.8
-	* policycoreutils 2.1.10
-	* Python >= 2.6
+	* libsepol 2.7
+	* libsemanage 2.6
+	* checkpolicy 2.6
+	* policycoreutils 2.6
+	* Python >= 3.4
 	* GCC
 
 To install Reference Policy sources into /etc/selinux/refpolicy/src/policy:

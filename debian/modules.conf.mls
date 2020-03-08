@@ -279,11 +279,11 @@ apache = module
 apcupsd = module
 
 # Layer: contrib
-# Module: apm
+# Module: acpi
 #
 # Advanced power management.
 # 
-apm = module
+acpi = module
 
 # Layer: contrib
 # Module: apt
@@ -305,13 +305,6 @@ arpwatch = module
 # Asterisk IP telephony server.
 # 
 asterisk = module
-
-# Layer: contrib
-# Module: authbind
-#
-# Tool for non-root processes to bind to reserved ports.
-# 
-authbind = off
 
 # Layer: contrib
 # Module: automount
@@ -454,6 +447,13 @@ ccs = module
 cdrecord = module
 
 # Layer: contrib
+# Module: certbot
+#
+# Certificate request daemon
+# 
+certbot = module
+
+# Layer: contrib
 # Module: certmaster
 #
 # Remote certificate distribution framework.
@@ -487,6 +487,13 @@ cfengine = module
 # libcg is a library that abstracts the control group file system in Linux.
 # 
 cgroup = module
+
+# Layer: contrib
+# Module: chromium
+#
+# Chromium web browser
+# 
+chromium = module
 
 # Layer: contrib
 # Module: chronyd
@@ -2932,3 +2939,9 @@ unconfined = module
 # 
 userdomain = base
 
+# Layer: system
+# Module: xdg
+#
+# Policy for xdg cache types
+#
+xdg = module

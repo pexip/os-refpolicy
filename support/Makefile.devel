@@ -5,10 +5,10 @@ INSTALL ?= install
 M4 ?= m4
 SED ?= sed
 EINFO ?= echo
-PYTHON ?= python
+PYTHON ?= python3
 CUT ?= cut
 
-NAME ?= $(shell $(AWK) -F= '/^SELINUXTYPE/{ print $$2 }' /etc/selinux/config)
+NAME ?= $(strip $(shell $(AWK) -F= '/^SELINUXTYPE/{ print $$2 }' /etc/selinux/config))
 SHAREDIR ?= /usr/share/selinux
 HEADERDIR ?= $(SHAREDIR)/$(NAME)/include
 
@@ -68,6 +68,10 @@ endif
 
 ifeq "$(UBAC)" "y"
 	M4PARAM += -D enable_ubac
+endif
+
+ifneq "$(CUSTOM_BUILDOPT)" ""
+	M4PARAM += $(foreach opt,$(CUSTOM_BUILDOPT),-D $(opt))
 endif
 
 # default MLS/MCS sensitivity and category settings.
@@ -179,7 +183,7 @@ tmp/all_interfaces.conf: $(m4support) $(header_interfaces) $(detected_ifs)
 # so users dont have to make empty .fc and .if files
 $(detected_fcs):
 	@touch $@
-	
+
 $(detected_ifs):
 	@echo "## <summary>$(basename $(@D))</summary>" > $@
 

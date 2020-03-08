@@ -1,22 +1,22 @@
 Source: refpolicy
-VCS-Git: https://anonscm.debian.org/git/selinux/refpolicy.git
-VCS-Browser: https://anonscm.debian.org/gitweb/?p=selinux/refpolicy.git;a=summary
+VCS-Git: https://salsa.debian.org/selinux-team/refpolicy.git
+VCS-Browser: https://salsa.debian.org/selinux-team/refpolicy
 Priority: optional
 Section: admin
-Homepage: https://github.com/TresysTechnology/refpolicy/wiki
+Homepage: https://github.com/SELinuxProject/refpolicy/releases
 Maintainer: Pexip AS <packaging@pexip.com>
 XSBC-Pexip-Original-Maintainer: Debian SELinux maintainers <selinux-devel@lists.alioth.debian.org>
 XSBC-Pexip-Original-Uploaders: Russell Coker <russell@coker.com.au>
-Standards-Version: 3.9.8
-Build-Depends: debhelper (>= 9)
+Standards-Version: 4.1.4
+Build-Depends: debhelper (>= 11)
 Build-Depends-Indep: bzip2,
-                     checkpolicy (>= 2.5),
+                     checkpolicy (>= 2.8-1),
                      gawk,
-                     libsepol1 (>= 2.5),
+                     libsepol1 (>= 2.8-1),
                      m4,
-                     policycoreutils (>= 2.5),
-                     policycoreutils-python-utils (>= 2.5),
-                     python,
+                     policycoreutils (>= 2.8-1),
+                     policycoreutils-python-utils (>= 2.8-1),
+                     python3,
 # Needed for the --sort=name option, can probably be removed when this version
 # hits stable.
                      tar (>= 1.28)
@@ -24,11 +24,11 @@ XS-Pexip-Upstream: http://ftp.debian.org/debian/ buster
 
 Package: selinux-policy-default
 Architecture: all
-Depends: libselinux1 (>= 2.5),
-         libsemanage1 (>= 2.5),
-         libsepol1 (>= 2.5),
-         policycoreutils (>= 2.5),
-         selinux-utils (>= 2.5),
+Depends: libselinux1 (>= 2.8-1),
+         libsemanage1 (>= 2.8-1),
+         libsepol1 (>= 2.8-1),
+         policycoreutils (>= 2.8-1),
+         selinux-utils (>= 2.8-1),
          ${misc:Depends}
 Recommends: checkpolicy, setools
 Suggests: logcheck, syslog-summary
@@ -44,12 +44,11 @@ Description: Strict and Targeted variants of the SELinux policy
 
 Package: selinux-policy-mls
 Architecture: all
-Priority: extra
-Depends: libselinux1 (>= 2.4),
-         libsemanage1 (>= 2.4),
-         libsepol1 (>= 2.4),
-         policycoreutils (>= 2.4),
-         selinux-utils (>= 2.4),
+Depends: libselinux1 (>= 2.8-1),
+         libsemanage1 (>= 2.8-1),
+         libsepol1 (>= 2.8-1),
+         policycoreutils (>= 2.8-1),
+         selinux-utils (>= 2.8-1),
          ${misc:Depends}
 Recommends: checkpolicy, setools
 Suggests: logcheck, syslog-summary
@@ -66,14 +65,14 @@ Description: MLS (Multi Level Security) variant of the SELinux policy
 
 Package: selinux-policy-src
 Architecture: all
-Depends: checkpolicy (>= 2.4),
+Depends: checkpolicy (>= 2.8-1),
          gawk,
          make,
-         policycoreutils (>= 2.4),
-         policycoreutils-python-utils (>= 2.4),
-         python,
+         policycoreutils (>= 2.8-1),
+         policycoreutils-python-utils (>= 2.8-1),
+         python3,
          ${misc:Depends}
-Recommends: policycoreutils-dev (>= 2.4), setools
+Recommends: policycoreutils-dev (>= 2.8-1), setools
 Suggests: logcheck, syslog-summary
 Description: Source of the SELinux reference policy for customization
  The SELinux Reference Policy (refpolicy) is a complete SELinux
@@ -98,15 +97,15 @@ Description: Source of the SELinux reference policy for customization
 
 Package: selinux-policy-dev
 Architecture: all
-Depends: checkpolicy (>= 2.4),
+Depends: checkpolicy (>= 2.8-1),
          gawk,
          m4,
          make,
-         policycoreutils (>= 2.4),
-         policycoreutils-dev (>= 2.4),
-         policycoreutils-python-utils (>= 2.4),
-         python,
-         selinux-utils (>= 2.4),
+         policycoreutils (>= 2.8-1),
+         policycoreutils-dev (>= 2.8-1),
+         policycoreutils-python-utils (>= 2.8-1),
+         python3,
+         selinux-utils (>= 2.8-1),
          ${misc:Depends}
 Recommends: setools
 Description: Headers from the SELinux reference policy for building modules
