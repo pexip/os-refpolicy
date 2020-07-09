@@ -12,19 +12,3 @@ index 1184395..f4b9151 100644
  /usr/sbin/usermod	--	gen_context(system_u:object_r:useradd_exec_t,s0)
  /usr/sbin/vigr		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
  /usr/sbin/vipw		--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
-diff --git a/policy/modules/kernel/corecommands.fc b/policy/modules/kernel/corecommands.fc
-index 096c4fd..1608920 100644
---- a/policy/modules/kernel/corecommands.fc
-+++ b/policy/modules/kernel/corecommands.fc
-@@ -82,6 +82,11 @@ ifdef(`distro_redhat',`
- 
- /etc/netplug\.d(/.*)? 	 		gen_context(system_u:object_r:bin_t,s0)
- 
-+/etc/network/if-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-+/etc/network/if-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-+/etc/network/if-pre-up\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-+/etc/network/if-port-down\.d/.*	--	gen_context(system_u:object_r:bin_t,s0)
-+
- /etc/PackageKit/events(/.*)?		gen_context(system_u:object_r:bin_t,s0)
- 
- /etc/pki/tls/certs/make-dummy-cert -- 	gen_context(system_u:object_r:bin_t,s0)
