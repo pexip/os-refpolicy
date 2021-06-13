@@ -129,7 +129,7 @@ bootloader = module
 #
 # Determine of the console connected to the controlling terminal.
 # 
-consoletype = module
+consoletype = off
 
 # Layer: admin
 # Module: dmesg
@@ -178,7 +178,7 @@ seunshare = module
 #
 # Automated bug-reporting tool.
 # 
-abrt = module
+abrt = off
 
 # Layer: contrib
 # Module: accountsd
@@ -193,13 +193,6 @@ accountsd = module
 # Berkeley process accounting.
 # 
 acct = module
-
-# Layer: contrib
-# Module: ada
-#
-# GNAT Ada95 compiler.
-# 
-ada = module
 
 # Layer: contrib
 # Module: afs
@@ -291,6 +284,13 @@ acpi = module
 # Advanced package tool.
 # 
 apt = module
+
+# Layer: contrib
+# Module: aptcacher
+#
+# Advanced package tool.
+# 
+aptcacher = module
 
 # Layer: contrib
 # Module: arpwatch
@@ -423,7 +423,7 @@ calamaris = module
 #
 # PBX software.
 # 
-callweaver = module
+callweaver = off
 
 # Layer: contrib
 # Module: canna
@@ -437,7 +437,7 @@ canna = module
 #
 # Cluster Configuration System.
 # 
-ccs = module
+ccs = off
 
 # Layer: contrib
 # Module: cdrecord
@@ -458,7 +458,7 @@ certbot = module
 #
 # Remote certificate distribution framework.
 # 
-certmaster = module
+certmaster = off
 
 # Layer: contrib
 # Module: certmonger
@@ -472,7 +472,7 @@ certmonger = module
 #
 # Digital Certificate Tracking.
 # 
-certwatch = module
+certwatch = off
 
 # Layer: contrib
 # Module: cfengine
@@ -507,7 +507,7 @@ chronyd = module
 #
 # Encrypted tunnel daemon.
 # 
-cipe = module
+cipe = off
 
 # Layer: contrib
 # Module: clamav
@@ -521,14 +521,14 @@ clamav = module
 #
 # Clock speed measurement and manipulation.
 # 
-clockspeed = module
+clockspeed = off
 
 # Layer: contrib
 # Module: clogd
 #
 # Clustered Mirror Log Server.
 # 
-clogd = module
+clogd = off
 
 # Layer: contrib
 # Module: cmirrord
@@ -543,6 +543,13 @@ cmirrord = module
 # Cobbler installation server.
 # 
 cobbler = module
+
+# Layer: contrib
+# Module: cockpit
+#
+# Web based sysadmin tool that includes web shell access
+# 
+cockpit = module
 
 # Layer: contrib
 # Module: collectd
@@ -571,13 +578,6 @@ comsat = module
 # High-Throughput Computing System.
 # 
 condor = module
-
-# Layer: contrib
-# Module: consolekit
-#
-# Framework for facilitating multiple user sessions on desktops.
-# 
-consolekit = module
 
 # Layer: contrib
 # Module: corosync
@@ -689,14 +689,14 @@ dbskk = module
 #
 # Desktop messaging bus.
 # 
-dbus = module
+dbus = base
 
 # Layer: contrib
 # Module: dcc
 #
 # Distributed checksum clearinghouse spam filtering.
 # 
-dcc = module
+dcc = off
 
 # Layer: contrib
 # Module: ddclient
@@ -710,14 +710,14 @@ ddclient = module
 #
 # ddcprobe retrieves monitor and graphics card information.
 # 
-ddcprobe = module
+ddcprobe = off
 
 # Layer: contrib
 # Module: denyhosts
 #
 # SSH dictionary attack mitigation.
 # 
-denyhosts = module
+denyhosts = off
 
 # Layer: contrib
 # Module: devicekit
@@ -783,13 +783,6 @@ dmidecode = module
 dnsmasq = module
 
 # Layer: contrib
-# Module: dnssectrigger
-#
-# Enables DNSSEC protection for DNS traffic.
-# 
-dnssectrigger = module
-
-# Layer: contrib
 # Module: dovecot
 #
 # POP and IMAP mail server.
@@ -815,7 +808,7 @@ drbd = module
 #
 # Content-based spam filter designed for multi-user enterprise systems.
 # 
-dspam = module
+dspam = off
 
 # Layer: contrib
 # Module: entropyd
@@ -874,18 +867,11 @@ finger = module
 firewalld = module
 
 # Layer: contrib
-# Module: firewallgui
-#
-# system-config-firewall dbus system service.
-# 
-firewallgui = module
-
-# Layer: contrib
 # Module: firstboot
 #
 # Initial system configuration utility.
 # 
-firstboot = module
+firstboot = off
 
 # Layer: contrib
 # Module: fprintd
@@ -921,13 +907,6 @@ gatekeeper = module
 # GNUstep distributed object mapper.
 # 
 gdomap = module
-
-# Layer: contrib
-# Module: gift
-#
-# Peer to peer file sharing tool.
-# 
-gift = module
 
 # Layer: contrib
 # Module: git
@@ -1007,13 +986,6 @@ guest = module
 hadoop = off
 
 # Layer: contrib
-# Module: hal
-#
-# Hardware abstraction layer.
-# 
-hal = module
-
-# Layer: contrib
 # Module: hddtemp
 #
 # Hard disk temperature tool running as a daemon.
@@ -1025,7 +997,7 @@ hddtemp = module
 #
 # Port of Apple Rendezvous multicast DNS.
 # 
-howl = module
+howl = off
 
 # Layer: contrib
 # Module: hypervkvp
@@ -1060,7 +1032,7 @@ ifplugd = module
 #
 # iMaze game server.
 # 
-imaze = module
+imaze = off
 
 # Layer: contrib
 # Module: inetd
@@ -1137,7 +1109,7 @@ java = module
 #
 # Jockey driver manager.
 # 
-jockey = module
+jockey = off
 
 # Layer: contrib
 # Module: kdump
@@ -1145,13 +1117,6 @@ jockey = module
 # Kernel crash dumping mechanism.
 # 
 kdump = module
-
-# Layer: contrib
-# Module: kdumpgui
-#
-# System-config-kdump GUI.
-# 
-kdumpgui = module
 
 # Layer: contrib
 # Module: kerberos
@@ -1166,13 +1131,6 @@ kerberos = module
 # Service for reporting kernel oopses to kerneloops.org.
 # 
 kerneloops = module
-
-# Layer: contrib
-# Module: keyboardd
-#
-# Xorg.conf keyboard layout callout.
-# 
-keyboardd = module
 
 # Layer: contrib
 # Module: keystone
@@ -1200,14 +1158,7 @@ ksmtuned = module
 #
 # KDE Talk daemon.
 # 
-ktalk = module
-
-# Layer: contrib
-# Module: kudzu
-#
-# Hardware detection and configuration tools.
-# 
-kudzu = off
+ktalk = off
 
 # Layer: contrib
 # Module: l2tp
@@ -1270,7 +1221,7 @@ loadkeys = module
 #
 # Library for locking devices.
 # 
-lockdev = module
+lockdev = off
 
 # Layer: contrib
 # Module: logrotate
@@ -1298,7 +1249,7 @@ lpd = module
 #
 # Storage array management library.
 # 
-lsm = module
+lsm = off
 
 # Layer: contrib
 # Module: mailman
@@ -1312,7 +1263,7 @@ mailman = module
 #
 # E-mail security and anti-spam package for e-mail gateway systems.
 # 
-mailscanner = module
+mailscanner = off
 
 # Layer: contrib
 # Module: man2html
@@ -1329,11 +1280,18 @@ man2html = module
 mandb = module
 
 # Layer: contrib
+# Module: matrixd
+#
+# Matrix IM daemon
+# 
+matrixd = module
+
+# Layer: contrib
 # Module: mcelog
 #
 # Linux hardware error daemon.
 # 
-mcelog = module
+mcelog = off
 
 # Layer: contrib
 # Module: mediawiki
@@ -1348,6 +1306,13 @@ mediawiki = module
 # High-performance memory object caching system.
 # 
 memcached = module
+
+# Layer: contrib
+# Module: memlockd
+#
+# Daemon that locks files into RAM so they are fast when the paging thrashes
+# 
+memlockd = module
 
 # Layer: contrib
 # Module: milter
@@ -1564,7 +1529,7 @@ nx = module
 #
 # Open AntiVirus scannerdaemon and signature update.
 # 
-oav = module
+oav = off
 
 # Layer: contrib
 # Module: obex
@@ -1644,13 +1609,6 @@ pads = module
 passenger = module
 
 # Layer: contrib
-# Module: pcmcia
-#
-# PCMCIA card management services.
-# 
-pcmcia = module
-
-# Layer: contrib
 # Module: pcscd
 #
 # PCSC smart card service.
@@ -1693,13 +1651,6 @@ pkcs = module
 plymouthd = module
 
 # Layer: contrib
-# Module: podsleuth
-#
-# Podsleuth is a tool to get information about an Apple (TM) iPod (TM).
-# 
-podsleuth = module
-
-# Layer: contrib
 # Module: policykit
 #
 # Policy framework for controlling privileges for system-wide services.
@@ -1711,7 +1662,7 @@ policykit = module
 #
 # Lightweight forwarding and caching proxy server.
 # 
-polipo = module
+polipo = off
 
 # Layer: contrib
 # Module: portage
@@ -1805,13 +1756,6 @@ procmail = module
 psad = module
 
 # Layer: contrib
-# Module: ptchown
-#
-# helper function for grantpt(3), changes ownship and permissions of pseudotty.
-# 
-ptchown = module
-
-# Layer: contrib
 # Module: publicfile
 #
 # publicfile supplies files to the public through HTTP and FTP.
@@ -1851,7 +1795,7 @@ pxe = module
 #
 # ICQ transport for XMPP server.
 # 
-pyicqt = module
+pyicqt = off
 
 # Layer: contrib
 # Module: pyzor
@@ -1924,6 +1868,13 @@ radvd = module
 raid = module
 
 # Layer: contrib
+# Module: rasdaemon
+#
+# rasdaemon tracks motherboard hardware errors
+# 
+rasdaemon = module
+
+# Layer: contrib
 # Module: razor
 #
 # A distributed, collaborative, spam detection and filtering network.
@@ -1936,13 +1887,6 @@ razor = module
 # Network router discovery daemon.
 # 
 rdisc = module
-
-# Layer: contrib
-# Module: readahead
-#
-# Read files into page cache for improved performance.
-# 
-readahead = module
 
 # Layer: contrib
 # Module: realmd
@@ -1970,7 +1914,7 @@ remotelogin = module
 #
 # Resource management daemon.
 # 
-resmgr = module
+resmgr = off
 
 # Layer: contrib
 # Module: rgmanager
@@ -1984,28 +1928,21 @@ rgmanager = module
 #
 # Red Hat Cluster Suite.
 # 
-rhcs = module
-
-# Layer: contrib
-# Module: rhgb
-#
-# Red Hat Graphical Boot.
-# 
-rhgb = off
+rhcs = off
 
 # Layer: contrib
 # Module: rhsmcertd
 #
 # Subscription Management Certificate Daemon.
 # 
-rhsmcertd = module
+rhsmcertd = off
 
 # Layer: contrib
 # Module: ricci
 #
 # Ricci cluster management agent.
 # 
-ricci = module
+ricci = off
 
 # Layer: contrib
 # Module: rlogin
@@ -2020,13 +1957,6 @@ rlogin = module
 # Check and feed random data from hardware device to kernel random device.
 # 
 rngd = module
-
-# Layer: contrib
-# Module: roundup
-#
-# Roundup Issue Tracking System.
-# 
-roundup = module
 
 # Layer: contrib
 # Module: rpc
@@ -2047,7 +1977,7 @@ rpcbind = module
 #
 # Redhat package manager.
 # 
-rpm = module
+rpm = off
 
 # Layer: contrib
 # Module: rshd
@@ -2092,13 +2022,6 @@ rwho = module
 samba = module
 
 # Layer: contrib
-# Module: sambagui
-#
-# system-config-samba dbus service.
-# 
-sambagui = module
-
-# Layer: contrib
 # Module: samhain
 #
 # Check file integrity.
@@ -2132,13 +2055,6 @@ sblim = module
 # GNU terminal multiplexer.
 # 
 screen = module
-
-# Layer: contrib
-# Module: sectoolm
-#
-# Sectool security audit tool.
-# 
-sectoolm = module
 
 # Layer: contrib
 # Module: sendmail
@@ -2218,13 +2134,6 @@ smartmon = module
 smokeping = module
 
 # Layer: contrib
-# Module: smoltclient
-#
-# The Fedora hardware profiler client.
-# 
-smoltclient = module
-
-# Layer: contrib
 # Module: smstools
 #
 # Tools to send and receive short messages through GSM modems or mobile phones.
@@ -2267,13 +2176,6 @@ soundserver = module
 spamassassin = module
 
 # Layer: contrib
-# Module: speedtouch
-#
-# Alcatel speedtouch USB ADSL modem
-# 
-speedtouch = off
-
-# Layer: contrib
 # Module: squid
 #
 # Squid caching http proxy server.
@@ -2307,6 +2209,13 @@ svnserve = module
 # SUID/SGID program monitoring.
 # 
 sxid = module
+
+# Layer: contrib
+# Module: sympa
+#
+# Manage electronic mail discussion and e-newsletter lists.
+# 
+sympa = module
 
 # Layer: contrib
 # Module: sysstat
@@ -2537,7 +2446,7 @@ vdagent = module
 #
 # Virtual host metrics daemon.
 # 
-vhostmd = module
+vhostmd = off
 
 # Layer: contrib
 # Module: virt
@@ -2573,13 +2482,6 @@ vnstatd = module
 # Virtual Private Networking client.
 # 
 vpn = module
-
-# Layer: contrib
-# Module: w3c
-#
-# W3C Markup Validator.
-# 
-w3c = module
 
 # Layer: contrib
 # Module: watchdog
@@ -2652,25 +2554,11 @@ xfs = module
 xguest = module
 
 # Layer: contrib
-# Module: xprint
-#
-# A X11-based print system and API.
-# 
-xprint = module
-
-# Layer: contrib
 # Module: xscreensaver
 #
 # Modular screen saver and locker for X11.
 # 
 xscreensaver = module
-
-# Layer: contrib
-# Module: yam
-#
-# Yum/Apt Mirroring.
-# 
-yam = module
 
 # Layer: contrib
 # Module: zabbix
@@ -2811,14 +2699,6 @@ getty = module
 # Policy for changing the system host name.
 # 
 hostname = module
-
-# Layer: system
-# Module: hotplug
-#
-# Policy for hotplug system, for supporting the
-# connection and disconnection of devices at runtime.
-# 
-hotplug = module
 
 # Layer: system
 # Module: init
