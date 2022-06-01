@@ -1,20 +1,19 @@
-Index: refpolicy-2.20190201/policy/modules/services/dictd.te
+Index: refpolicy-2.20210203/policy/modules/services/dictd.te
 ===================================================================
---- refpolicy-2.20190201.orig/policy/modules/services/dictd.te
-+++ refpolicy-2.20190201/policy/modules/services/dictd.te
-@@ -84,3 +84,7 @@ optional_policy(`
- optional_policy(`
- 	udev_read_db(dictd_t)
+--- refpolicy-2.20210203.orig/policy/modules/services/dictd.te
++++ refpolicy-2.20210203/policy/modules/services/dictd.te
+@@ -79,3 +79,6 @@ optional_policy(`
+ 	seutil_sigchld_newrole(dictd_t)
  ')
-+
+ 
 +ifdef(`init_systemd',`
 +	init_dbus_chat(dictd_t)
 +')
-Index: refpolicy-2.20190201/policy/modules/services/postfix.te
+Index: refpolicy-2.20210203/policy/modules/services/postfix.te
 ===================================================================
---- refpolicy-2.20190201.orig/policy/modules/services/postfix.te
-+++ refpolicy-2.20190201/policy/modules/services/postfix.te
-@@ -385,9 +385,6 @@ manage_lnk_files_pattern(postfix_bounce_
+--- refpolicy-2.20210203.orig/policy/modules/services/postfix.te
++++ refpolicy-2.20210203/policy/modules/services/postfix.te
+@@ -377,9 +377,6 @@ manage_lnk_files_pattern(postfix_bounce_
  
  optional_policy(`
  	init_dbus_chat(postfix_bounce_t)
@@ -24,9 +23,9 @@ Index: refpolicy-2.20190201/policy/modules/services/postfix.te
  	dbus_system_bus_client(postfix_bounce_t)
  ')
  
-@@ -764,6 +761,11 @@ mcs_file_read_all(postfix_showq_t)
- term_use_all_ptys(postfix_showq_t)
- term_use_all_ttys(postfix_showq_t)
+@@ -767,6 +764,11 @@ optional_policy(`
+ 	unconfined_run_to(postfix_showq_t, postfix_showq_exec_t)
+ ')
  
 +ifdef(`init_systemd',`
 +	init_dbus_chat(postfix_showq_t)
@@ -36,7 +35,7 @@ Index: refpolicy-2.20190201/policy/modules/services/postfix.te
  ########################################
  #
  # Smtp delivery local policy
-@@ -784,6 +786,12 @@ optional_policy(`
+@@ -787,6 +789,12 @@ optional_policy(`
  ')
  
  optional_policy(`
@@ -49,7 +48,7 @@ Index: refpolicy-2.20190201/policy/modules/services/postfix.te
  	dovecot_stream_connect(postfix_smtp_t)
  ')
  
-@@ -822,9 +830,8 @@ mta_read_aliases(postfix_smtpd_t)
+@@ -824,9 +832,8 @@ mta_read_aliases(postfix_smtpd_t)
  mta_map_aliases(postfix_smtpd_t)
  
  optional_policy(`
