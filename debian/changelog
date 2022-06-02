@@ -1,3 +1,9 @@
+refpolicy (2:2.20210203-7pexip1) pexip; urgency=medium
+
+  * Initial bullseye build
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 02 Jun 2022 14:42:54 +0100
+
 refpolicy (2:2.20210203-7) unstable; urgency=medium
 
   * Allow certbot to create /var/log/letsencrypt and /var/lib/letsencrypt
