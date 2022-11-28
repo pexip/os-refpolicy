@@ -1,3 +1,9 @@
+refpolicy (2:2.20210203-7pexip4) pexip; urgency=medium
+
+  * Use the correct distribution
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 28 Nov 2022 18:54:57 +0000
+
 refpolicy (2:2.20210203-7pexip4) pexip-bullseye; urgency=medium
 
   * Remove data about modules on upgrade - we always want to use the
