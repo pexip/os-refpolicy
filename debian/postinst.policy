@@ -34,6 +34,10 @@ case "$1" in
 	    rm -fr /etc/selinux/${flavour}/users
 	fi
 
+	# Remove data about modules on upgrade - we always want to use
+	# the latest config from the new package, not the old one.
+	rm -rf /var/lib/selinux/${flavour}/active/modules/*
+
 	echo -n "Updating selinux ${flavour} policy (this step might take a moment)..."
 
 	# list all the modules that are already installed with our priority

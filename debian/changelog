@@ -1,3 +1,10 @@
+refpolicy (2:2.20210203-7pexip4) pexip-bullseye; urgency=medium
+
+  * Remove data about modules on upgrade - we always want to use the
+    latest config from the new package, not the old one.
+
+ -- Steve McIntyre <steve.mcintyre@pexip.com>  Mon, 28 Nov 2022 18:04:57 +0000
+
 refpolicy (2:2.20210203-7pexip3) pexip-bullseye; urgency=medium
 
   * Bullseye rebuild for ARM64 inclusion
