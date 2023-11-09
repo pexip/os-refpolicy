@@ -20,7 +20,7 @@ Build-Depends-Indep: bzip2,
 # Needed for the --sort=name option, can probably be removed when this version
 # hits stable.
                      tar (>= 1.28)
-XS-Pexip-Upstream: http://deb.debian.org/debian/ bullseye
+XS-Pexip-Upstream: http://deb.debian.org/debian/ bookworm
 
 Package: selinux-policy-default
 Architecture: all
