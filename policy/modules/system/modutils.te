@@ -1,4 +1,4 @@
-policy_module(modutils, 1.24.0)
+policy_module(modutils)
 
 ########################################
 #
@@ -40,6 +40,7 @@ dontaudit kmod_t self:capability sys_admin;
 
 allow kmod_t self:udp_socket create_socket_perms;
 allow kmod_t self:rawip_socket create_socket_perms;
+allow kmod_t self:key write;
 
 # Read module config and dependency information
 list_dirs_pattern(kmod_t, modules_conf_t, modules_conf_t)
@@ -53,7 +54,6 @@ can_exec(kmod_t, kmod_exec_t)
 
 kernel_load_module(kmod_t)
 kernel_request_load_module(kmod_t)
-kernel_read_crypto_sysctls(kmod_t)
 kernel_read_system_state(kmod_t)
 kernel_read_network_state(kmod_t)
 kernel_write_proc_files(kmod_t)
@@ -79,6 +79,7 @@ dev_rw_agp(kmod_t)
 dev_read_sound(kmod_t)
 dev_write_sound(kmod_t)
 dev_rw_acpi_bios(kmod_t)
+dev_write_kmsg(kmod_t)
 
 domain_signal_all_domains(kmod_t)
 domain_use_interactive_fds(kmod_t)
@@ -88,6 +89,7 @@ files_read_kernel_symbol_table(kmod_t)
 files_read_etc_runtime_files(kmod_t)
 files_read_etc_files(kmod_t)
 files_read_usr_files(kmod_t)
+files_read_usr_src_files(kmod_t)
 files_exec_etc_files(kmod_t)
 files_search_tmp(kmod_t)
 # for nscd:

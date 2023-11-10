@@ -1,4 +1,4 @@
-policy_module(qemu, 1.13.0)
+policy_module(qemu)
 
 ########################################
 #
@@ -32,8 +32,6 @@ init_unit_file(qemu_unit_t)
 #
 # Local policy
 #
-
-kernel_read_crypto_sysctls(qemu_t)
 
 dev_read_sysfs(qemu_t)
 

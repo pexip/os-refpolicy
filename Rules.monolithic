@@ -25,6 +25,7 @@ endif
 polbinpath := $(shell $(binary_policy_path))
 
 policy_conf = $(builddir)policy.conf
+policy_cil = $(builddir)policy.cil
 fc = $(builddir)file_contexts
 polver = $(builddir)policy.$(pv)
 homedir_template = $(builddir)homedir_template
@@ -82,6 +83,19 @@ ifneq ($(pv),$(kv))
 	@echo
 endif
 	$(verbose) $(CHECKPOLICY) -U $(UNK_PERMS) -S -O -E $^ -o $@
+
+########################################
+#
+# Build a CIL policy locally
+#
+$(policy_cil): $(policy_conf)
+	@echo "Compiling $(NAME) $(policy_cil)"
+ifneq ($(pv),$(kv))
+	@echo
+	@echo "WARNING: Policy version mismatch (policy:$(pv) kernel:$(kv))!  Is your OUTPUT_POLICY set correctly?"
+	@echo
+endif
+	$(verbose) $(CHECKPOLICY) -C -U $(UNK_PERMS) -S -O -E $^ -o $@
 
 ########################################
 #
@@ -165,14 +179,14 @@ $(tmpdir)/all_attrs_types.conf: $(tmpdir)/all_te_files.conf
 $(tmpdir)/all_post.conf: $(tmpdir)/all_te_files.conf $(tmpdir)/post_te_files.conf
 	$(verbose) cat $(tmpdir)/post_te_files.conf > $@
 # these have to run individually because order matters:
-	$(verbose) $(GREP) '^sid ' $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) '^fs_use_(xattr|task|trans)' $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^genfscon $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^portcon $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^netifcon $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^nodecon $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^ibpkeycon $(tmpdir)/all_te_files.conf >> $@ || true
-	$(verbose) $(GREP) ^ibendportcon $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*sid ' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*fs_use_(xattr|task|trans)' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*genfscon' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*portcon' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*netifcon' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*nodecon' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*ibpkeycon' $(tmpdir)/all_te_files.conf >> $@ || true
+	$(verbose) $(GREP) '^[[:blank:]]*ibendportcon' $(tmpdir)/all_te_files.conf >> $@ || true
 
 $(tmpdir)/only_te_rules.conf: $(tmpdir)/all_te_files.conf
 	$(verbose) $(comment_move_decl) $^ > $@
@@ -261,6 +275,7 @@ $(installdir)/seusers: $(seusers)
 clean:
 	$(verbose) rm -f $(policy_conf)
 	$(verbose) rm -f $(polver)
+	$(verbose) rm -f $(policy_cil)
 	$(verbose) rm -f $(fc)
 	$(verbose) rm -f $(homedir_template)
 	$(verbose) rm -f $(net_contexts) $(net_contexts_nft)
