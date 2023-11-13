@@ -1,4 +1,4 @@
-policy_module(networkmanager, 1.27.0)
+policy_module(networkmanager)
 
 ########################################
 #
@@ -93,7 +93,6 @@ files_runtime_filetrans(NetworkManager_t, NetworkManager_runtime_t, { dir file s
 
 can_exec(NetworkManager_t, { NetworkManager_exec_t NetworkManager_initrc_exec_t wpa_cli_exec_t NetworkManager_tmp_t })
 
-kernel_read_crypto_sysctls(NetworkManager_t)
 kernel_read_system_state(NetworkManager_t)
 kernel_read_network_state(NetworkManager_t)
 kernel_read_kernel_sysctls(NetworkManager_t)
@@ -146,6 +145,7 @@ files_manage_etc_symlinks(NetworkManager_t)
 files_read_etc_runtime_files(NetworkManager_t)
 files_read_usr_files(NetworkManager_t)
 files_read_usr_src_files(NetworkManager_t)
+files_watch_etc_dirs(NetworkManager_t)
 
 fs_getattr_all_fs(NetworkManager_t)
 fs_search_auto_mountpoints(NetworkManager_t)
@@ -160,11 +160,14 @@ storage_getattr_fixed_disk_dev(NetworkManager_t)
 init_read_utmp(NetworkManager_t)
 init_dontaudit_write_utmp(NetworkManager_t)
 init_domtrans_script(NetworkManager_t)
+init_get_system_status(NetworkManager_t)
 
 auth_use_nsswitch(NetworkManager_t)
 
 logging_send_audit_msgs(NetworkManager_t)
 logging_send_syslog_msg(NetworkManager_t)
+
+libs_watch_lib_dirs(NetworkManager_t)
 
 miscfiles_read_generic_certs(NetworkManager_t)
 miscfiles_read_localization(NetworkManager_t)
@@ -259,10 +262,6 @@ optional_policy(`
 ')
 
 optional_policy(`
-	howl_signal(NetworkManager_t)
-')
-
-optional_policy(`
 	ipsec_domtrans_mgmt(NetworkManager_t)
 	ipsec_kill_mgmt(NetworkManager_t)
 	ipsec_signal_mgmt(NetworkManager_t)
@@ -311,10 +310,6 @@ optional_policy(`
 	policykit_read_lib(NetworkManager_t)
 	policykit_read_reload(NetworkManager_t)
 	userdom_read_all_users_state(NetworkManager_t)
-')
-
-optional_policy(`
-	polipo_initrc_domtrans(NetworkManager_t)
 ')
 
 optional_policy(`

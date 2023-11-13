@@ -1,4 +1,4 @@
-policy_module(locallogin, 1.22.0)
+policy_module(locallogin)
 
 ########################################
 #
@@ -54,6 +54,10 @@ files_lock_filetrans(local_login_t, local_login_lock_t, file)
 allow local_login_t local_login_tmp_t:dir manage_dir_perms;
 allow local_login_t local_login_tmp_t:file manage_file_perms;
 files_tmp_filetrans(local_login_t, local_login_tmp_t, { file dir })
+
+fs_getattr_cgroup(local_login_t)
+fs_search_cgroup_dirs(local_login_t)
+fs_getattr_xattr_fs(local_login_t)
 
 kernel_read_system_state(local_login_t)
 kernel_read_kernel_sysctls(local_login_t)
@@ -141,6 +145,8 @@ ifdef(`init_systemd',`
 	auth_manage_faillog(local_login_t)
 
 	init_dbus_chat(local_login_t)
+	init_use_fds(local_login_t)
+
 	systemd_connect_machined(local_login_t)
 	systemd_dbus_chat_logind(local_login_t)
 	systemd_use_logind_fds(local_login_t)
@@ -155,6 +161,10 @@ ifdef(`distro_ubuntu',`
 	optional_policy(`
 		unconfined_domain(local_login_t)
 	')
+')
+
+tunable_policy(`allow_polyinstantiation',`
+	seutil_domtrans_setfiles(local_login_t)
 ')
 
 tunable_policy(`console_login',`
@@ -234,7 +244,6 @@ allow sulogin_t self:msgq create_msgq_perms;
 allow sulogin_t self:msg { send receive };
 
 kernel_read_system_state(sulogin_t)
-kernel_read_crypto_sysctls(sulogin_t)
 kernel_stream_connect(sulogin_t)
 kernel_use_fds(sulogin_t)
 # because file systems are not mounted:
