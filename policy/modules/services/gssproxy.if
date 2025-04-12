@@ -2,7 +2,7 @@
 
 ########################################
 ## <summary>
-##	Execute gssproxy in the gssproxy domin.
+##	Execute gssproxy in the gssproxy domain.
 ## </summary>
 ## <param name="domain">
 ##	<summary>
@@ -93,20 +93,6 @@ interface(`gssproxy_manage_lib_dirs',`
 
 	files_search_var_lib($1)
 	manage_dirs_pattern($1, gssproxy_var_lib_t, gssproxy_var_lib_t)
-')
-
-########################################
-## <summary>
-##	Read gssproxy PID files.  (Deprecated)
-## </summary>
-## <param name="domain">
-##	<summary>
-##	Domain allowed access.
-##	</summary>
-## </param>
-#
-interface(`gssproxy_read_pid_files',`
-	refpolicywarn(`$0($*) has been deprecated.')
 ')
 
 ########################################
