@@ -18,7 +18,7 @@ Build-Depends-Indep: bzip2,
                      policycoreutils-python-utils (>= 3.4),
                      python3,
 		     zstd
-XS-Pexip-Upstream: http://deb.debian.org/debian/ bookworm
+XS-Pexip-Upstream: http://deb.debian.org/debian/ trixie
 
 Package: selinux-policy-default
 Architecture: all
