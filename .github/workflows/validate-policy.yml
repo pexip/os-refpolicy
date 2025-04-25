@@ -1,0 +1,88 @@
+name: Validate policy
+
+on:
+  workflow_call:
+    inputs:
+      python-version:
+        description: "Python version to use"
+        required: true
+        type: string
+
+jobs:
+  sechecker:
+    runs-on: ubuntu-22.04
+
+    strategy:
+      matrix:
+        distro: ["redhat", "debian", "gentoo"]
+        type: ["standard", "mcs", "mls"]
+        monolithic: ["y", "n"]
+        systemd: ["y", "n"]
+        direct_initrc: ["y", "n"]
+        apps-off: ["unconfined", ""]
+        exclude:
+          - { distro: "redhat", systemd: "n" }
+          - { distro: "redhat", direct_initrc: "y" }
+          - { distro: "debian", systemd: "n" }
+          - { distro: "debian", direct_initrc: "y" }
+          - { type: "mls", apps-off: "" }
+          - { systemd: "y", direct_initrc: "y" }
+          # above here, the matrix must be the same as in build-policy.yml.
+          # below here, remove duplicate analyses
+          - { monolithic: "n" }
+          - { type: "standard" }
+          - { apps-off: "" }
+          - { systemd: "n" }
+
+    steps:
+      - name: Checkout testing dir of repo
+        uses: actions/checkout@v4
+        with:
+          sparse-checkout: testing
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          sudo apt-get update -q
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: "${{ inputs.python-version }}"
+
+      - name: Download userspace artifact
+        uses: actions/download-artifact@v4
+        id: dl-userspace
+        with:
+          name: selinux
+
+      - name: Download policy artifact
+        uses: actions/download-artifact@v4
+        id: dl-refpolicy
+        with:
+          name: refpolicy-${{ matrix.distro }}-${{ matrix.type }}-${{ matrix.monolithic }}-${{ matrix.systemd }}-${{ matrix.direct_initrc }}-${{ matrix.apps-off }}
+
+      - name: Download setools artifact
+        uses: actions/download-artifact@v4
+        id: dl-setools
+        with:
+          name: setools
+
+      - name: Install dependencies
+        shell: bash
+        run: |
+          tar -C "${{ steps.dl-setools.outputs.download-path }}" -zxvf selinux.tar.gz
+          sudo python -m pip install setools*.whl networkx
+
+      - name: Validate security goals with sechecker
+        shell: bash
+        id: sechecker
+        run: sechecker testing/sechecker.ini ${{ steps.dl-refpolicy.outputs.download-path }}/sepolicy -o sechecker.log
+
+      - name: Upload artifact
+        uses: actions/upload-artifact@v4
+        if: ${{ always() }}
+        with:
+          name: validation-${{ matrix.distro }}-${{ matrix.type }}-${{ matrix.monolithic }}-${{ matrix.systemd }}-${{ matrix.direct_initrc }}-${{ matrix.apps-off }}
+          path: |
+            sechecker.log
