@@ -37,6 +37,7 @@ override_dh_compress:
 
 override_dh_installdeb:
 	for flavour in $(FLAVOURS) ; do \
+	  sed -e "s/=FLAVOUR=/$$flavour/g" debian/preinst.policy > $(CURDIR)/debian/selinux-policy-$$flavour.preinst; \
 	  sed -e "s/=FLAVOUR=/$$flavour/g" debian/postinst.policy > $(CURDIR)/debian/selinux-policy-$$flavour.postinst; \
 	  sed -e "s/=FLAVOUR=/$$flavour/g" debian/postrm.policy > $(CURDIR)/debian/selinux-policy-$$flavour.postrm; \
 	done
@@ -46,6 +47,7 @@ override_dh_clean:
 	dh_clean
 	$(MAKE) bare
 	for flavour in $(FLAVOURS) ; do \
+	  rm -f $(CURDIR)/debian/selinux-policy-$$flavour.preinst; \
 	  rm -f $(CURDIR)/debian/selinux-policy-$$flavour.postinst; \
 	  rm -f $(CURDIR)/debian/selinux-policy-$$flavour.postrm; \
 	  rm -rf $(CURDIR)/debian/build-$$flavour; \
@@ -62,6 +64,8 @@ override_dh_clean:
 override_dh_auto_build: $(patsubst %, build-%-policy, $(FLAVOURS))
 
 override_dh_auto_install: $(patsubst %, install-%-policy, $(FLAVOURS)) install-default-dev install-docs install-src
+
+override_dh_auto_test: $(patsubst %, test-%-policy, $(FLAVOURS))
 
 conf-%-policy:
 	test ! -d $(CURDIR)/debian/build-$* ||                             \
@@ -108,7 +112,12 @@ conf-src:
 
 build-%-policy: conf-%-policy
 	(cd $(CURDIR)/debian/build-$* ;                          \
-             $(MAKE) NAME=$* TYPE=$(TYPE_$*) UBAC=$(UBAC_$*) UNK_PERMS=$(UNK_PERMS_$*) $(COMMON_OPTIONS) policy)
+             $(MAKE) DESTDIR=$(CURDIR)/debian/build-$*/tmp NAME=$* TYPE=$(TYPE_$*) UBAC=$(UBAC_$*) UNK_PERMS=$(UNK_PERMS_$*) $(COMMON_OPTIONS) policy)
+	touch $@
+
+test-%-policy: build-%-policy
+	(cd $(CURDIR)/debian/build-$*; \
+	    $(MAKE) DESTDIR=$(CURDIR)/debian/build-$*/tmp NAME=$* TYPE=$(TYPE_$*) UBAC=$(UBAC_$*) UNK_PERMS=$(UNK_PERMS_$*) $(COMMON_OPTIONS) validate)
 	touch $@
 
 install-%-policy: build-%-policy
@@ -164,6 +173,6 @@ install-src: conf-src
 	  rm -rf selinux-policy-src/support/__pycache__/; \
 	  find selinux-policy-src -type f -print0 | xargs -0r chmod 0644; \
 	  find selinux-policy-src -type d -print0 | xargs -0r chmod 0755; \
-	  TZ=UTC tar cf - --sort=name --mtime="$(BUILD_DATE)" selinux-policy-src | zstd -9 > $(CURDIR)/debian/tmp/usr/src/selinux-policy-src.tar.zst)
+	  TZ=UTC tar cf - --sort=name --mtime="$(BUILD_DATE)" --owner=0 --group=0 --numeric-owner selinux-policy-src | zstd -19 -T0 > $(CURDIR)/debian/tmp/usr/src/selinux-policy-src.tar.zst)
 	rm -rf               $(CURDIR)/debian/tmp/etc/selinux/default/src/
 	touch $@
