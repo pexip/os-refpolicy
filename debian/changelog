@@ -1,3 +1,9 @@
+refpolicy (2:2.20250213-3+pexip25u1) pexip-trixie; urgency=medium
+
+  * Initial trixie build
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Tue, 29 Apr 2025 22:57:33 +0100
+
 refpolicy (2:2.20250213-3) unstable; urgency=medium
 
   * allow user_systemd_t to read logind state
