@@ -1,3 +1,108 @@
+refpolicy (2:2.20250213-10) unstable; urgency=medium
+
+  * Allow user_bubblewrap_t to transition to user_t via user_home_t and
+    user_bin_t
+  * Fixes for evolution, colord, dbus, wm, and xdm.  Now the GNOME desktop
+    is fully functional and sddm works as a graphical login.
+
+ -- Russell Coker <russell@coker.com.au>  Fri, 25 Jul 2025 22:36:54 +1000
+
+refpolicy (2:2.20250213-9) unstable; urgency=medium
+
+  * Allow sympa_t to signal itself, create udp sockets, and bind to a generic
+    node
+  * Fixed labelling for /var/log/opensnitchd.log.* and
+    /var/cache/apt-xapian-index/*
+  * Allow systemd-logind to receive fds from xdm - needed for SDDM to function
+  * Labelled /usr/bin/efibootmgr as bootloader_exec_t
+  * Labelled /usr/bin/screendump as screen_exec_t
+  * Labelled /usr/sbin/veritysetup as lvm_exec_t
+  * Add a user login for Debian-gdm that gets the xdm identity
+  * Add some user_wm_t permissions for GNOME and PHOC logins, PHOC and KDE
+    Plasma with gdm3 are fully functional and GNOME is mostly functional.
+  * Add labels for /var/lib/lxc and /var/lib/misc/dnsmasq.[a-z0-9]+.leases
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 19 Jul 2025 22:55:24 +1000
+
+refpolicy (2:2.20250213-8) unstable; urgency=medium
+
+  * Fix syntax errors
+  * Allow dovecot_auth_t to mape dovecot_runtime_t files
+  * Allow mon_net_test_t to run netutils
+  * removed unused interfaces fs_mounton_memory_pressure and
+    userdom_watch_user_ttys
+  * Remove systemd_logind_use_fds and use systemd_use_logind_fds instead
+  * Allow dhcpc_t to list resolved runtime dir and stat generic units files
+  * Allow systemd-logind and systemd-user-runtime-dir stat /proc as logind
+    failing to do so can cause difficult to diagnose dbus issues with
+    pam_login
+  * Allow fwupd to signal itself
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 06 Jul 2025 19:29:50 +1000
+
+refpolicy (2:2.20250213-7) unstable; urgency=medium
+
+  * Allow user systemd domains to list user tmp, watch root, read usr files,
+    and create sockets for gpg_t and user_ssh_agent_t
+  * Allow needrestart to list init var lib dirs
+  * Allow dhcpc_t to connect to itself via a unix stream socket
+  * Allow systemd_user_runtime_dir_t to unlink ssh_agent_tmp_t sock files
+  * Allow systemd_machine_id_setup_t to send syslog messages
+
+ -- Russell Coker <russell@coker.com.au>  Tue, 03 Jun 2025 20:58:37 +1000
+
+refpolicy (2:2.20250213-6) unstable; urgency=medium
+
+  * Allow fail2ban to watch the audit log
+  * Dontaudit needrestart statting device nodes and writing /var dirs
+  * Allow needrestart to read vm overcommit sysctl and logind sessions
+    allow it to send signull to sshd and xdm, allow it to stat generic ptys
+  * Allow semanage to read vm overcommit sysctl
+  * Allow utempter to create dgram sockets and stat localisaton files
+  * Allow systemd-nspawn to read init runtime files (for MAC generation),
+    to write to /dev/kmsg, to send syslog messages
+  * Allow systemd-machined to create dirs of type systemd_machined_runtime_t
+    under init_runtime_t, to see systemd-nspawn processes, to manage it's
+    runtime dirs, and to create and unlink runtime sock_files.
+  * Add policy for opensnitch
+  * Label /etc/kernel/entry-tokenaas etc_runtime_t
+  * Allow NetworkManager_t to read systemd networkd runtime and to get init
+    status
+
+ -- Russell Coker <russell@coker.com.au>  Sat, 24 May 2025 16:54:19 +1000
+
+refpolicy (2:2.20250213-5) unstable; urgency=medium
+
+  * allow user_wm_t and similar domains the sys_nice capability.
+  * Allow needrestart to signal all systemd --user processes
+  * Make the dir type transition for var_lib_t when dpkg_script_t creates
+    subdirs only apply to dirs named "ntpsec" to avoid breaking dkms postinst
+  * Label /var/lib/dkms as src_t
+  * Allow mozilla to talk to ntpd and systemd-logind via dbus
+  * Allow systemd-logind to change ownership of dma_device_t
+  * Allow policykit to get the systemd status
+  * Allow sshd to create /var/lib/wtmpdb
+
+ -- Russell Coker <russell@coker.com.au>  Wed, 30 Apr 2025 13:00:58 +1000
+
+refpolicy (2:2.20250213-4) unstable; urgency=medium
+
+  * Allow chromium_t to start and get status of user_systemd_t
+  * Allow user_dbusd_t to receive chromium_t file handles and write to them
+  * Allow user_t to write chromium_t fifos
+  * Allow accountsd_t to search init units
+  * Allow cupsd_config_t to connect to cups via stream sockets and to send dbus
+    messages to unconfined_t
+  * Allow power_profilesd_t to dbus message devicekit power
+  * Allow unconfined_t to inherit file handles from systmd_logind_t
+  * Allow gpg_agent_t to read gpg_t files (process status)
+  * Allow acpid to read logind sessions files
+  * Give capability kill to needrestart
+  * Label /var/lib/wtmpdb as faillog_t and allow pam_domain to manage faillog
+  * Allow policykit_t to get status of transient units
+
+ -- Russell Coker <russell@coker.com.au>  Thu, 24 Apr 2025 17:07:06 +1000
+
 refpolicy (2:2.20250213-3) unstable; urgency=medium
 
   * allow user_systemd_t to read logind state

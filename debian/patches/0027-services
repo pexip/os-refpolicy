@@ -13,7 +13,16 @@ Index: refpolicy-2.20250213/policy/modules/services/accountsd.te
  allow accountsd_t self:fifo_file rw_fifo_file_perms;
  allow accountsd_t self:passwd { chfn chsh passwd rootok };
  
-@@ -67,5 +67,9 @@ optional_policy(`
+@@ -49,6 +49,8 @@ auth_use_nsswitch(accountsd_t)
+ auth_read_login_records(accountsd_t)
+ auth_read_shadow(accountsd_t)
+ 
++init_search_units(accountsd_t)
++
+ miscfiles_read_localization(accountsd_t)
+ 
+ logging_list_logs(accountsd_t)
+@@ -67,5 +69,9 @@ optional_policy(`
  ')
  
  optional_policy(`
@@ -55,11 +64,12 @@ Index: refpolicy-2.20250213/policy/modules/services/acpi.te
  init_telinit(acpid_t)
  
  libs_exec_ld_so(acpid_t)
-@@ -218,6 +223,7 @@ optional_policy(`
+@@ -218,6 +223,8 @@ optional_policy(`
  
  optional_policy(`
  	init_list_unit_dirs(acpid_t)
 +	systemd_dbus_chat_logind(acpid_t)
++	systemd_read_logind_sessions_files(acpid_t)
  	systemd_start_power_units(acpid_t)
  	systemd_status_power_units(acpid_t)
  ')
@@ -372,7 +382,24 @@ Index: refpolicy-2.20250213/policy/modules/services/cups.te
  files_list_world_readable(cupsd_t)
  files_read_world_readable_files(cupsd_t)
  files_read_world_readable_symlinks(cupsd_t)
-@@ -548,6 +558,10 @@ userdom_manage_user_home_content_dirs(cu
+@@ -386,6 +396,8 @@ dev_read_urand(cupsd_config_t)
+ dev_read_rand(cupsd_config_t)
+ dev_rw_generic_usb_dev(cupsd_config_t)
+ 
++cups_stream_connect(cupsd_config_t)
++
+ files_read_etc_runtime_files(cupsd_config_t)
+ files_read_usr_files(cupsd_config_t)
+ files_read_var_symlinks(cupsd_config_t)
+@@ -449,6 +461,7 @@ optional_policy(`
+ ')
+ 
+ optional_policy(`
++	unconfined_dbus_send(cupsd_config_t)
+ 	unconfined_stream_connect(cupsd_config_t)
+ ')
+ 
+@@ -548,6 +561,10 @@ userdom_manage_user_home_content_dirs(cu
  userdom_manage_user_home_content_files(cups_pdf_t)
  userdom_home_filetrans_user_home_dir(cups_pdf_t)
  
@@ -453,6 +480,15 @@ Index: refpolicy-2.20250213/policy/modules/services/dovecot.te
 ===================================================================
 --- refpolicy-2.20250213.orig/policy/modules/services/dovecot.te
 +++ refpolicy-2.20250213/policy/modules/services/dovecot.te
+@@ -262,7 +262,7 @@ manage_files_pattern(dovecot_auth_t, dov
+ files_tmp_filetrans(dovecot_auth_t, dovecot_auth_tmp_t, { file dir })
+ 
+ allow dovecot_auth_t dovecot_runtime_t:dir list_dir_perms;
+-allow dovecot_auth_t dovecot_runtime_t:file manage_file_perms;
++allow dovecot_auth_t dovecot_runtime_t:file mmap_manage_file_perms;
+ allow dovecot_auth_t dovecot_runtime_t:fifo_file write_fifo_file_perms;
+ manage_sock_files_pattern(dovecot_auth_t, dovecot_runtime_t, dovecot_runtime_t)
+ 
 @@ -272,6 +272,8 @@ kernel_dontaudit_getattr_proc(dovecot_au
  
  kernel_getattr_proc(dovecot_auth_t)
@@ -466,7 +502,7 @@ Index: refpolicy-2.20250213/policy/modules/services/fail2ban.te
 ===================================================================
 --- refpolicy-2.20250213.orig/policy/modules/services/fail2ban.te
 +++ refpolicy-2.20250213/policy/modules/services/fail2ban.te
-@@ -92,6 +92,8 @@ fs_getattr_all_fs(fail2ban_t)
+@@ -92,8 +92,11 @@ fs_getattr_all_fs(fail2ban_t)
  
  auth_use_nsswitch(fail2ban_t)
  
@@ -474,8 +510,11 @@ Index: refpolicy-2.20250213/policy/modules/services/fail2ban.te
 +
  logging_read_all_logs(fail2ban_t)
  logging_read_audit_log(fail2ban_t)
++logging_watch_audit_log(fail2ban_t)
  logging_send_syslog_msg(fail2ban_t)
-@@ -136,13 +138,14 @@ optional_policy(`
+ 
+ miscfiles_read_localization(fail2ban_t)
+@@ -136,13 +139,14 @@ optional_policy(`
  #
  
  allow fail2ban_client_t self:capability dac_read_search;
@@ -491,7 +530,7 @@ Index: refpolicy-2.20250213/policy/modules/services/fail2ban.te
  
  corecmd_exec_bin(fail2ban_client_t)
  
-@@ -152,6 +155,8 @@ files_read_etc_files(fail2ban_client_t)
+@@ -152,6 +156,8 @@ files_read_etc_files(fail2ban_client_t)
  files_read_usr_files(fail2ban_client_t)
  files_search_runtime(fail2ban_client_t)
  
@@ -554,7 +593,15 @@ Index: refpolicy-2.20250213/policy/modules/services/mon.te
  ########################################
  #
  # Local policy
-@@ -159,6 +165,10 @@ optional_policy(`
+@@ -143,6 +149,7 @@ auth_use_nsswitch(mon_net_test_t)
+ miscfiles_read_generic_certs(mon_net_test_t)
+ miscfiles_read_localization(mon_net_test_t)
+ 
++netutils_domtrans(mon_net_test_t)
+ netutils_domtrans_ping(mon_net_test_t)
+ 
+ sysnet_read_config(mon_net_test_t)
+@@ -159,6 +166,10 @@ optional_policy(`
  	snmp_read_snmp_var_lib_files(mon_net_test_t)
  ')
  
@@ -565,7 +612,7 @@ Index: refpolicy-2.20250213/policy/modules/services/mon.te
  ########################################
  #
  # Local policy
-@@ -169,7 +179,7 @@ optional_policy(`
+@@ -169,7 +180,7 @@ optional_policy(`
  #
  
  # sys_ptrace is for reading /proc/1/maps etc
@@ -574,7 +621,7 @@ Index: refpolicy-2.20250213/policy/modules/services/mon.te
  allow mon_local_test_t self:fifo_file rw_fifo_file_perms;
  allow mon_local_test_t self:process { getsched sigkill signal sigstop };
  allow mon_local_test_t self:cap_userns sys_ptrace;
-@@ -203,6 +213,7 @@ files_search_spool(mon_local_test_t)
+@@ -203,6 +214,7 @@ files_search_spool(mon_local_test_t)
  files_list_boot(mon_local_test_t)
  
  fs_search_auto_mountpoints(mon_local_test_t)
@@ -582,7 +629,7 @@ Index: refpolicy-2.20250213/policy/modules/services/mon.te
  fs_getattr_nfs(mon_local_test_t)
  fs_getattr_xattr_fs(mon_local_test_t)
  fs_list_cgroup_dirs(mon_local_test_t)
-@@ -242,6 +253,11 @@ sysnet_read_config(mon_local_test_t)
+@@ -242,6 +254,11 @@ sysnet_read_config(mon_local_test_t)
  userdom_dontaudit_read_user_tmpfs_files(mon_local_test_t)
  
  optional_policy(`
@@ -606,7 +653,15 @@ Index: refpolicy-2.20250213/policy/modules/services/networkmanager.te
  
  manage_dirs_pattern(NetworkManager_t, NetworkManager_etc_rw_t, NetworkManager_etc_rw_t)
  manage_files_pattern(NetworkManager_t, NetworkManager_etc_rw_t, NetworkManager_etc_rw_t)
-@@ -168,6 +169,8 @@ auth_use_nsswitch(NetworkManager_t)
+@@ -162,12 +163,16 @@ storage_getattr_fixed_disk_dev(NetworkMa
+ init_read_utmp(NetworkManager_t)
+ init_dontaudit_write_utmp(NetworkManager_t)
+ init_domtrans_script(NetworkManager_t)
++init_get_generic_units_status(NetworkManager_t)
+ init_get_system_status(NetworkManager_t)
++init_search_units(NetworkManager_t)
+ 
+ auth_use_nsswitch(NetworkManager_t)
  
  libs_watch_shared_libs_dirs(NetworkManager_t)
  
@@ -615,7 +670,7 @@ Index: refpolicy-2.20250213/policy/modules/services/networkmanager.te
  logging_send_audit_msgs(NetworkManager_t)
  logging_send_syslog_msg(NetworkManager_t)
  
-@@ -224,6 +227,10 @@ optional_policy(`
+@@ -228,6 +233,10 @@ optional_policy(`
  ')
  
  optional_policy(`
@@ -623,9 +678,17 @@ Index: refpolicy-2.20250213/policy/modules/services/networkmanager.te
 +')
 +
 +optional_policy(`
- 	chronyd_domtrans_cli(NetworkManager_t)
+ 	cron_read_system_job_lib_files(NetworkManager_t)
  ')
  
+@@ -344,6 +353,7 @@ optional_policy(`
+ optional_policy(`
+ 	systemd_read_logind_runtime_files(NetworkManager_t)
+ 	systemd_read_logind_sessions_files(NetworkManager_t)
++	systemd_read_networkd_runtime(NetworkManager_t)
+ 	systemd_watch_logind_runtime_dirs(NetworkManager_t)
+ 	systemd_watch_logind_sessions_dirs(NetworkManager_t)
+ 	systemd_watch_machines_dirs(NetworkManager_t)
 Index: refpolicy-2.20250213/policy/modules/services/policykit.te
 ===================================================================
 --- refpolicy-2.20250213.orig/policy/modules/services/policykit.te
@@ -638,7 +701,7 @@ Index: refpolicy-2.20250213/policy/modules/services/policykit.te
  
  manage_dirs_pattern(policykit_t, policykit_runtime_t, policykit_runtime_t)
  manage_files_pattern(policykit_t, policykit_runtime_t, policykit_runtime_t)
-@@ -133,10 +134,13 @@ optional_policy(`
+@@ -135,10 +136,13 @@ optional_policy(`
  ')
  
  optional_policy(`
@@ -692,7 +755,7 @@ Index: refpolicy-2.20250213/policy/modules/services/ssh.te
  
  ## <desc>
  ## <p>
-@@ -195,6 +195,11 @@ tunable_policy(`user_tcp_server',`
+@@ -200,6 +200,11 @@ tunable_policy(`user_tcp_server',`
  ')
  
  optional_policy(`
@@ -704,7 +767,7 @@ Index: refpolicy-2.20250213/policy/modules/services/ssh.te
  	tunable_policy(`ssh_use_gpg_agent',`
  		gpg_stream_connect_agent(ssh_t)
  	')
-@@ -268,6 +273,8 @@ ifdef(`distro_debian',`
+@@ -273,6 +278,8 @@ ifdef(`distro_debian',`
  ifdef(`init_systemd',`
  	auth_use_pam_systemd(sshd_t)
  	init_dbus_chat(sshd_t)
@@ -713,7 +776,7 @@ Index: refpolicy-2.20250213/policy/modules/services/ssh.te
  	init_rw_stream_sockets(sshd_t)
  	systemd_dgram_nspawn(sshd_t)
  	systemd_write_inherited_logind_sessions_pipes(sshd_t)
-@@ -293,6 +300,11 @@ tunable_policy(`allow_polyinstantiation'
+@@ -298,6 +305,11 @@ tunable_policy(`allow_polyinstantiation'
  ')
  
  optional_policy(`
@@ -1023,7 +1086,7 @@ Index: refpolicy-2.20250213/policy/modules/kernel/files.if
  ##	Get the attributes of all directories.
  ## </summary>
  ## <param name="domain">
-@@ -1489,6 +1507,25 @@ interface(`files_watch_all_dirs',`
+@@ -1489,6 +1507,24 @@ interface(`files_watch_all_dirs',`
  
  ########################################
  ## <summary>
@@ -1044,12 +1107,11 @@ Index: refpolicy-2.20250213/policy/modules/kernel/files.if
 +')
 +
 +########################################
-+########################################
 +## <summary>
  ##	Read all non-authentication related
  ##	directories.
  ## </summary>
-@@ -6390,6 +6427,24 @@ interface(`files_read_var_lib_files',`
+@@ -6390,6 +6426,24 @@ interface(`files_read_var_lib_files',`
  ')
  
  ########################################
@@ -1783,7 +1845,7 @@ Index: refpolicy-2.20250213/policy/modules/services/xserver.if
 ===================================================================
 --- refpolicy-2.20250213.orig/policy/modules/services/xserver.if
 +++ refpolicy-2.20250213/policy/modules/services/xserver.if
-@@ -1089,6 +1089,24 @@ interface(`xserver_read_xdm_lib_files',`
+@@ -1107,6 +1107,24 @@ interface(`xserver_read_xdm_lib_files',`
  
  ########################################
  ## <summary>
@@ -1861,7 +1923,7 @@ Index: refpolicy-2.20250213/policy/modules/services/eg25manager.te
  allow eg25manager_t self:tcp_socket { connect create getattr getopt read setopt write };
  allow eg25manager_t self:udp_socket { connect create getattr read setopt write };
  allow eg25manager_t self:unix_dgram_socket { create write };
-+allow eg25manager_t self:fifo_file rw_file_perms;
++allow eg25manager_t self:fifo_file rw_fifo_file_perms;
  
  files_tmp_filetrans(eg25manager_t, eg25manager_tmp_t, { file })
  allow eg25manager_t eg25manager_tmp_t:file manage_file_perms;
@@ -1970,7 +2032,7 @@ Index: refpolicy-2.20250213/policy/modules/kernel/files.fc
 ===================================================================
 --- refpolicy-2.20250213.orig/policy/modules/kernel/files.fc
 +++ refpolicy-2.20250213/policy/modules/kernel/files.fc
-@@ -261,7 +261,6 @@ ifndef(`distro_redhat',`
+@@ -262,7 +262,6 @@ ifndef(`distro_redhat',`
  /var/run		-l	gen_context(system_u:object_r:var_run_t,s0)
  
  /var/spool(/.*)?		gen_context(system_u:object_r:var_spool_t,s0)
@@ -2035,3 +2097,113 @@ Index: refpolicy-2.20250213/policy/modules/services/ssh.fc
  /usr/lib/openssh/sshd-session	--	gen_context(system_u:object_r:sshd_exec_t,s0)
  /usr/lib/ssh/ssh-keysign	--	gen_context(system_u:object_r:ssh_keysign_exec_t,s0)
  
+Index: refpolicy-2.20250213/policy/modules/services/powerprofiles.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/services/powerprofiles.te
++++ refpolicy-2.20250213/policy/modules/services/powerprofiles.te
+@@ -48,6 +48,10 @@ ifdef(`init_systemd',`
+ ')
+ 
+ optional_policy(`
++	devicekit_dbus_chat_power(power_profilesd_t)
++')
++
++optional_policy(`
+ 	unconfined_dbus_send(power_profilesd_t)
+ ')
+ 
+Index: refpolicy-2.20250213/policy/modules/system/authlogin.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/authlogin.te
++++ refpolicy-2.20250213/policy/modules/system/authlogin.te
+@@ -244,7 +244,7 @@ dev_read_urand(pam_domain)
+ # for encrypted homedir
+ dev_read_sysfs(pam_domain)
+ 
+-auth_create_faillog_files(pam_domain)
++auth_manage_faillog(pam_domain)
+ auth_domtrans_upd_passwd(pam_domain)
+ auth_rw_lastlog(pam_domain)
+ auth_rw_faillog(pam_domain)
+Index: refpolicy-2.20250213/policy/modules/system/authlogin.fc
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/authlogin.fc
++++ refpolicy-2.20250213/policy/modules/system/authlogin.fc
+@@ -51,6 +51,7 @@ ifdef(`distro_gentoo',`
+ 
+ /var/lib/abl(/.*)?		gen_context(system_u:object_r:var_auth_t,s0)
+ /var/lib/pam_ssh(/.*)?		gen_context(system_u:object_r:var_auth_t,s0)
++/var/lib/wtmpdb(/.*)?		gen_context(system_u:object_r:faillog_t,s0)
+ 
+ /var/log/btmp.*		--	gen_context(system_u:object_r:faillog_t,s0)
+ /var/log/faillog	--	gen_context(system_u:object_r:faillog_t,s0)
+Index: refpolicy-2.20250213/policy/modules/system/authlogin.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/authlogin.if
++++ refpolicy-2.20250213/policy/modules/system/authlogin.if
+@@ -936,6 +936,7 @@ interface(`auth_rw_faillog',`
+ 	')
+ 
+ 	logging_search_logs($1)
++	allow $1 faillog_t:dir list_dir_perms;
+ 	allow $1 faillog_t:file rw_file_perms;
+ ')
+ 
+@@ -954,6 +955,7 @@ interface(`auth_manage_faillog',`
+ 		type faillog_t;
+ 	')
+ 
++	allow $1 faillog_t:dir manage_dir_perms;
+ 	allow $1 faillog_t:file manage_file_perms;
+ 	logging_rw_generic_log_dirs($1)
+ ')
+@@ -976,6 +978,24 @@ interface(`auth_setattr_faillog_files',`
+ 	setattr_files_pattern($1, faillog_t, faillog_t)
+ ')
+ 
++########################################
++## <summary>
++##	create the login failure log directory.
++## </summary>
++## <param name="domain">
++##	<summary>
++##	Domain allowed access.
++##	</summary>
++## </param>
++#
++interface(`auth_create_faillog_dir',`
++	gen_require(`
++		type faillog_t;
++	')
++
++	files_var_lib_filetrans($1, faillog_t, dir, "wtmpdb")
++')
++
+ #######################################
+ ## <summary>
+ ##	Read the last logins log.
+Index: refpolicy-2.20250213/policy/modules/services/ssh.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/services/ssh.if
++++ refpolicy-2.20250213/policy/modules/services/ssh.if
+@@ -240,6 +240,7 @@ template(`ssh_server_template', `
+ 
+ 	auth_rw_login_records($1_t)
+ 	auth_rw_faillog($1_t)
++	auth_create_faillog_dir($1_t)
+ 
+ 	# for sshd subsystems, such as sftp-server.
+ 	corecmd_getattr_bin_files($1_t)
+Index: refpolicy-2.20250213/policy/modules/system/logging.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/logging.if
++++ refpolicy-2.20250213/policy/modules/system/logging.if
+@@ -162,7 +162,7 @@ interface(`logging_watch_audit_log',`
+ 		type auditd_log_t;
+ 	')
+ 
+-	allow $1 auditd_log_t:file watch;
++	allow $1 auditd_log_t:{ file dir } watch;
+ ')
+ 
+ ########################################
