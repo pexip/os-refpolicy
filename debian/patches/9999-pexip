@@ -1,8 +1,8 @@
-diff --git a/policy/modules/admin/usermanage.fc b/policy/modules/admin/usermanage.fc
-index 1184395..f4b9151 100644
---- a/policy/modules/admin/usermanage.fc
-+++ b/policy/modules/admin/usermanage.fc
-@@ -27,7 +27,9 @@ ifdef(`distro_debian',`
+Index: refpolicy/policy/modules/admin/usermanage.fc
+===================================================================
+--- refpolicy.orig/policy/modules/admin/usermanage.fc
++++ refpolicy/policy/modules/admin/usermanage.fc
+@@ -37,7 +37,9 @@ ifdef(`distro_debian',`
  /usr/sbin/pwconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
  /usr/sbin/pwunconv	--	gen_context(system_u:object_r:admin_passwd_exec_t,s0)
  /usr/sbin/useradd	--	gen_context(system_u:object_r:useradd_exec_t,s0)
