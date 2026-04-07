@@ -1,3 +1,5 @@
+Add extra policy items necessary for PexOS
+
 Index: refpolicy/policy/modules/admin/usermanage.fc
 ===================================================================
 --- refpolicy.orig/policy/modules/admin/usermanage.fc
