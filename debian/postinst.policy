@@ -21,7 +21,7 @@ priority=100
 # not needed on a debian system
 notdefault="aisexec amtu bugzilla cobbler condor cyphesis git ksmtuned likewise livecd nessus numad oddjob openca rlogin rshd soundserver telnet publicfile thunderbird updfstab usernetctl"
 
-platform=$(hostnamectl chassis) || true
+platform="vm"
 case "$platform" in
   handset|watch|embedded)
 # dont need staff role
