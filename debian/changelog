@@ -1,3 +1,40 @@
+refpolicy (2:2.20250213-13~deb13u1) trixie; urgency=medium
+
+  * Fixes for Trixie stable update
+
+ -- Yifei Zhan <debian@zhan.science>  Sat, 23 May 2026 09:28:02 +0000
+
+refpolicy (2:2.20250213-13) unstable; urgency=medium
+
+  * Source only upload for testing migration
+
+ -- Yifei Zhan <debian@zhan.science>  Sat, 16 May 2026 10:09:26 +0000
+
+refpolicy (2:2.20250213-12) unstable; urgency=medium
+
+  [ Russell Coker ]
+  * Fix for usbguard
+  * Label /var/lib/dbconfig-common/sqlite3/sympa/sympa
+  * Allow pam sessions to create wtmp.db-journal
+
+ -- Yifei Zhan <debian@zhan.science>  Tue, 17 Mar 2026 07:25:31 +0000
+
+refpolicy (2:2.20250213-11) unstable; urgency=medium
+
+  * Added usbguard policy
+  * Allow chromium to stat xattr filesystems, read xkb libs, and give fifo
+    files to the window manager (to stop it crashing on paste)
+  * Allow pulseaudio_client domains (including the $1_wm_t domains) to mmap
+    the tmpfs files related to pulseaudio (for Chrome mostly)
+  * Allow systemd_passwd_agent_t to watch user runtime dirs for systemd
+    daemon restart
+  * Allow dhcpd_t to execute ntpd_exec_t in ntpd_t for dhcp scripts and start
+    generic units
+  * Allow systemd-nspawn to use user terminal devices for directly running by
+    sysadmin and allow managing mnt_t files
+
+ -- Russell Coker <russell@coker.com.au>  Sun, 19 Oct 2025 16:57:18 +1100
+
 refpolicy (2:2.20250213-10) unstable; urgency=medium
 
   * Allow user_bubblewrap_t to transition to user_t via user_home_t and

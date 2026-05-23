@@ -1,0 +1,280 @@
+Index: refpolicy-2.20250213/policy/modules/admin/usbguard.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/admin/usbguard.if
++++ refpolicy-2.20250213/policy/modules/admin/usbguard.if
+@@ -21,3 +21,21 @@ interface(`usbguard_stream_connect',`
+ 	files_search_runtime($1)
+ 	stream_connect_pattern($1, usbguard_tmpfs_t, usbguard_tmpfs_t, usbguard_t)
+ ')
++
++#####################################
++## <summary>
++##	mmap and rw usbguard tmpfs files
++## </summary>
++## <param name="domain">
++##	<summary>
++##	Domain allowed access.
++##	</summary>
++## </param>
++#
++interface(`usbguard_mmap_rw_tmpfs',`
++	gen_require(`
++		type usbguard_t, usbguard_tmpfs_t;
++	')
++
++	allow $1 usbguard_tmpfs_t:file mmap_rw_file_perms;
++')
+Index: refpolicy-2.20250213/policy/modules/admin/usbguard.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/admin/usbguard.te
++++ refpolicy-2.20250213/policy/modules/admin/usbguard.te
+@@ -42,7 +42,7 @@ files_tmpfs_file(usbguard_tmpfs_t)
+ allow usbguard_t self:capability { chown dac_read_search fowner };
+ allow usbguard_t self:process { getcap signal };
+ allow usbguard_t self:netlink_kobject_uevent_socket create_socket_perms;
+-allow usbguard_t self:unix_stream_socket rw_stream_socket_perms;
++allow usbguard_t self:unix_stream_socket { connectto rw_stream_socket_perms };
+ 
+ files_read_etc_files(usbguard_t)
+ list_dirs_pattern(usbguard_t, usbguard_conf_t, usbguard_conf_t)
+@@ -66,6 +66,8 @@ setattr_files_pattern(usbguard_t, usbgua
+ dev_rw_sysfs(usbguard_t)
+ 
+ kernel_read_kernel_sysctls(usbguard_t)
++kernel_read_system_state(usbguard_t)
++kernel_search_debugfs(usbguard_t)
+ kernel_dontaudit_getattr_proc(usbguard_t)
+ 
+ init_search_runtime(usbguard_t)
+@@ -75,6 +77,11 @@ logging_send_syslog_msg(usbguard_t)
+ 
+ miscfiles_read_localization(usbguard_t)
+ 
++optional_policy(`
++	dbus_system_bus_client(usbguard_t)
++	dbus_connect_system_bus(usbguard_t)
++')
++
+ tunable_policy(`usbguard_user_modify_rule_files',`
+ 	manage_files_pattern(usbguard_t, usbguard_conf_t, usbguard_rules_t)
+ ')
+Index: refpolicy-2.20250213/policy/modules/system/userdomain.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/userdomain.if
++++ refpolicy-2.20250213/policy/modules/system/userdomain.if
+@@ -1322,6 +1322,7 @@ template(`userdom_unpriv_user_template',
+ 	optional_policy(`
+ 		tunable_policy(`usbguard_user_modify_rule_files',`
+ 			usbguard_stream_connect($1_t)
++			usbguard_mmap_rw_tmpfs($1_t)
+ 		')
+ 	')
+ ')
+@@ -3982,6 +3983,24 @@ interface(`userdom_delete_all_user_runti
+ ')
+ 
+ ########################################
++## <summary>
++##	watch user runtime directories
++## </summary>
++## <param name="domain">
++##	<summary>
++##	Domain allowed access.
++##	</summary>
++## </param>
++#
++interface(`userdom_watch_all_user_runtime_dirs',`
++	gen_require(`
++		attribute user_runtime_content_type;
++	')
++
++	allow $1 user_runtime_content_type:dir watch;
++')
++
++########################################
+ ## <summary>
+ ##	delete user runtime files
+ ## </summary>
+Index: refpolicy-2.20250213/policy/modules/apps/chromium.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/apps/chromium.te
++++ refpolicy-2.20250213/policy/modules/apps/chromium.te
+@@ -193,7 +193,7 @@ files_watch_runtime_dirs(chromium_t)
+ # During find for /etc/whatever-release we get lots of output otherwise
+ files_dontaudit_getattr_all_dirs(chromium_t)
+ 
+-fs_dontaudit_getattr_xattr_fs(chromium_t)
++fs_getattr_xattr_fs(chromium_t)
+ fs_getattr_tmpfs(chromium_t)
+ fs_search_cgroup_dirs(chromium_t)
+ 
+@@ -221,6 +221,7 @@ xdg_manage_downloads(chromium_t)
+ xdg_read_config_files(chromium_t)
+ xdg_read_data_files(chromium_t)
+ 
++xserver_read_xkb_libs(chromium_t)
+ xserver_user_x_domain_template(chromium, chromium_t, chromium_tmpfs_t)
+ xserver_stream_connect_xdm(chromium_t)
+ xserver_manage_mesa_shader_cache(chromium_t)
+@@ -320,6 +321,7 @@ optional_policy(`
+ optional_policy(`
+ 	wm_map_tmpfs_files(chromium_t)
+ 	wm_rw_tmpfs_files(chromium_t)
++	wm_send_fifo_file(chromium_t)
+ ')
+ 
+ ########################################
+Index: refpolicy-2.20250213/policy/modules/apps/pulseaudio.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/apps/pulseaudio.te
++++ refpolicy-2.20250213/policy/modules/apps/pulseaudio.te
+@@ -285,7 +285,7 @@ allow pulseaudio_client pulseaudio_tmp_t
+ allow pulseaudio_client pulseaudio_tmp_t:file manage_file_perms;
+ allow pulseaudio_client pulseaudio_tmp_t:sock_file manage_sock_file_perms;
+ 
+-rw_files_pattern(pulseaudio_client, { pulseaudio_tmpfsfile pulseaudio_tmpfs_t }, { pulseaudio_tmpfsfile pulseaudio_tmpfs_t })
++mmap_rw_files_pattern(pulseaudio_client, { pulseaudio_tmpfsfile pulseaudio_tmpfs_t }, { pulseaudio_tmpfsfile pulseaudio_tmpfs_t })
+ allow pulseaudio_client pulseaudio_tmpfs_t:file map;
+ delete_files_pattern(pulseaudio_client, pulseaudio_tmpfsfile, pulseaudio_tmpfsfile)
+ 
+Index: refpolicy-2.20250213/policy/modules/apps/wm.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/apps/wm.if
++++ refpolicy-2.20250213/policy/modules/apps/wm.if
+@@ -384,6 +384,24 @@ interface(`wm_send_fd',`
+ 
+ ########################################
+ ## <summary>
++##      Allow wm domain to inherit a fifo_file
++## </summary>
++## <param name="domain">
++##      <summary>
++##      Domain to allow
++##      </summary>
++## </param>
++#
++interface(`wm_send_fifo_file',`
++        gen_require(`
++                attribute wm_domain;
++        ')
++
++        allow wm_domain $1:fifo_file rw_inherited_fifo_file_perms;
++')
++
++########################################
++## <summary>
+ ##	Create a domain for applications
+ ##	that are launched by the window
+ ##	manager.
+Index: refpolicy-2.20250213/policy/modules/system/systemd.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/systemd.te
++++ refpolicy-2.20250213/policy/modules/system/systemd.te
+@@ -1580,6 +1580,7 @@ allow systemd_nspawn_t systemd_nspawn_ru
+ allow systemd_nspawn_t systemd_nspawn_runtime_t:file manage_file_perms;
+ init_runtime_filetrans(systemd_nspawn_t, systemd_nspawn_runtime_t, dir)
+ 
++files_manage_mnt_files(systemd_nspawn_t)
+ files_read_etc_runtime_files(systemd_nspawn_t)
+ files_tmp_filetrans(systemd_nspawn_t, systemd_nspawn_tmp_t, { dir file })
+ allow systemd_nspawn_t systemd_nspawn_tmp_t:dir manage_dir_perms;
+@@ -1691,6 +1692,8 @@ sysnet_manage_config(systemd_nspawn_t)
+ udev_read_runtime_files(systemd_nspawn_t)
+ 
+ userdom_manage_user_home_dirs(systemd_nspawn_t)
++userdom_use_user_ptys(systemd_nspawn_t)
++domain_use_interactive_fds(systemd_nspawn_t)
+ 
+ systemd_write_notify_socket(systemd_nspawn_t)
+ 
+@@ -1840,10 +1843,12 @@ miscfiles_read_localization(systemd_pass
+ 
+ seutil_search_default_contexts(systemd_passwd_agent_t)
+ 
++userdom_list_user_tmp(systemd_passwd_agent_t)
+ userdom_use_user_terminals(systemd_passwd_agent_t)
+ userdom_search_user_runtime_root(systemd_passwd_agent_t)
+ userdom_search_user_runtime(systemd_passwd_agent_t)
+ systemd_search_user_runtime(systemd_passwd_agent_t)
++userdom_watch_all_user_runtime_dirs(systemd_passwd_agent_t)
+ 
+ optional_policy(`
+ 	getty_use_fds(systemd_passwd_agent_t)
+Index: refpolicy-2.20250213/policy/modules/system/sysnetwork.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/sysnetwork.te
++++ refpolicy-2.20250213/policy/modules/system/sysnetwork.te
+@@ -163,6 +163,7 @@ term_dontaudit_use_generic_ptys(dhcpc_t)
+ 
+ init_rw_utmp(dhcpc_t)
+ init_get_system_status(dhcpc_t)
++init_start_generic_units(dhcpc_t)
+ 
+ logging_send_syslog_msg(dhcpc_t)
+ 
+@@ -250,6 +251,7 @@ optional_policy(`
+ ')
+ 
+ optional_policy(`
++	ntp_domtrans(dhcpc_t)
+ 	ntp_initrc_domtrans(dhcpc_t)
+ 	ntp_read_drift_files(dhcpc_t)
+ 	ntp_read_conf_files(dhcpc_t)
+Index: refpolicy-2.20250213/policy/modules/admin/usbguard.fc
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/admin/usbguard.fc
++++ refpolicy-2.20250213/policy/modules/admin/usbguard.fc
+@@ -8,5 +8,6 @@
+ /usr/bin/usbguard-daemon			--	gen_context(system_u:object_r:usbguard_daemon_exec_t,s0)
+ 
+ /usr/sbin/usbguard-daemon			--	gen_context(system_u:object_r:usbguard_daemon_exec_t,s0)
++/usr/sbin/usbguard-dbus				--	gen_context(system_u:object_r:usbguard_daemon_exec_t,s0)
+ 
+ /var/log/usbguard(/.*)?					gen_context(system_u:object_r:usbguard_log_t,s0)
+Index: refpolicy-2.20250213/policy/modules/services/sympa.fc
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/services/sympa.fc
++++ refpolicy-2.20250213/policy/modules/services/sympa.fc
+@@ -6,4 +6,5 @@
+ /usr/lib/sympa/bin/.*	--	gen_context(system_u:object_r:sympa_exec_t,s0)
+ 
+ /var/lib/sympa(/.*)?		gen_context(system_u:object_r:sympa_var_t,s0)
++/var/lib/dbconfig-common/sqlite3/sympa(/.*)?	gen_context(system_u:object_r:sympa_var_t,s0)
+ /var/spool/sympa(/.*)?		gen_context(system_u:object_r:sympa_var_t,s0)
+Index: refpolicy-2.20250213/policy/modules/system/authlogin.if
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/authlogin.if
++++ refpolicy-2.20250213/policy/modules/system/authlogin.if
+@@ -1748,13 +1748,18 @@ interface(`auth_rw_login_records',`
+ ##	Domain allowed access.
+ ##	</summary>
+ ## </param>
++## <param name="name" optional="true">
++##      <summary>
++##      The name of the file being created.
++##      </summary>
++## </param>
+ #
+ interface(`auth_log_filetrans_login_records',`
+ 	gen_require(`
+ 		type wtmp_t;
+ 	')
+ 
+-	logging_log_filetrans($1, wtmp_t, file)
++	logging_log_filetrans($1, wtmp_t, file, $2)
+ ')
+ 
+ ########################################
+Index: refpolicy-2.20250213/policy/modules/system/authlogin.te
+===================================================================
+--- refpolicy-2.20250213.orig/policy/modules/system/authlogin.te
++++ refpolicy-2.20250213/policy/modules/system/authlogin.te
+@@ -246,6 +246,8 @@ dev_read_urand(pam_domain)
+ dev_read_sysfs(pam_domain)
+ 
+ auth_manage_faillog(pam_domain)
++auth_log_filetrans_login_records(pam_domain, "wtmp.db-journal")
++auth_manage_login_records(pam_domain)
+ auth_domtrans_upd_passwd(pam_domain)
+ auth_rw_lastlog(pam_domain)
+ auth_rw_faillog(pam_domain)
