@@ -2805,3 +2805,10 @@ userdomain = base
 # 
 xdg = module
 
+# Layer: system
+# Module: pexip
+#
+# Policy for pexos applications
+# 
+pexip = module
+

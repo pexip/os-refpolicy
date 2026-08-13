@@ -1,0 +1,206 @@
+--- /dev/null
++++ refpolicy/policy/modules/system/pexip.fc
+@@ -0,0 +1,2 @@
++
++
+--- /dev/null
++++ refpolicy/policy/modules/system/pexip.if
+@@ -0,0 +1,2 @@
++## <summary>PexOS rules.</summary>
++
+--- /dev/null
++++ refpolicy/policy/modules/system/pexip.te
+@@ -0,0 +1,193 @@
++policy_module(pexip)
++
++require {
++	type amqp_port_t;
++	type auditd_t;
++	type binfmt_misc_fs_t;
++	type bin_t;
++	type boot_t;
++	type bpf_t;
++	type cgroup_t;
++	type chkpwd_t;
++	type collectd_t;
++	type configfs_t;
++	type dosfs_t;
++	type dpkg_script_t;
++	type dpkg_t;
++	type entropyd_t;
++	type etc_runtime_t;
++	type getty_t;
++	type httpd_t;
++	type http_port_t;
++	type hugetlbfs_t;
++	type initrc_t;
++	type initrc_tmp_t;
++	type init_t;
++	type ipsec_mgmt_t;
++	type kernel_t;
++	type logrotate_t;
++	type memcached_t;
++	type node_t;
++	type ntpd_t;
++	type proc_t;
++	type pstore_t;
++	type rabbitmq_beam_t;
++	type rabbitmq_epmd_t;
++	type rabbitmq_var_log_t;
++	type restorecond_t;
++	type rsh_port_t;
++	type rsync_t;
++	type shell_exec_t;
++	type snmpd_t;
++	type sshd_t;
++	type syslogd_t;
++	type system_dbusd_t;
++	type systemd_logind_t;
++	type tmpfs_t;
++	type tmp_t;
++	type tracefs_t;
++	type udev_t;
++	type unconfined_t;
++	type unreserved_port_t;
++	type user_home_dir_t;
++	type user_runtime_root_t;
++	type user_runtime_t;
++	type var_lock_t;
++	type var_log_t;
++	type var_run_t;
++	type vmware_tools_t;
++	type vmware_vgauth_service_t;
++	class capability { dac_read_search net_raw };
++	class dir { getattr search };
++	class fd use;
++	class file { create execute execute_no_trans getattr lock map open read setattr unlink write };
++	class filesystem getattr;
++	class lnk_file read;
++	class netlink_xfrm_socket { nlmsg_read nlmsg_write read write };
++	class process { execmem getpgid signull };
++	class sock_file write;
++	class tcp_socket { accept listen name_connect node_bind };
++	class udp_socket node_bind;
++	class unix_stream_socket connectto;
++}
++
++#============= collectd_t ==============
++allow collectd_t auditd_t:dir search;
++allow collectd_t auditd_t:file { getattr open read };
++allow collectd_t chkpwd_t:dir search;
++allow collectd_t chkpwd_t:file { getattr open read };
++allow collectd_t dpkg_script_t:dir search;
++allow collectd_t dpkg_script_t:file { getattr open read };
++allow collectd_t dpkg_t:dir search;
++allow collectd_t dpkg_t:file { getattr open read };
++allow collectd_t entropyd_t:dir search;
++allow collectd_t entropyd_t:file { getattr open read };
++allow collectd_t getty_t:dir search;
++allow collectd_t getty_t:file { getattr open read };
++allow collectd_t httpd_t:dir search;
++allow collectd_t httpd_t:file { getattr open read };
++allow collectd_t init_t:dir search;
++allow collectd_t init_t:file { getattr open read };
++allow collectd_t initrc_t:dir search;
++allow collectd_t initrc_t:file { getattr open read };
++allow collectd_t ipsec_mgmt_t:dir search;
++allow collectd_t ipsec_mgmt_t:file { getattr open read };
++allow collectd_t kernel_t:dir search;
++allow collectd_t kernel_t:file { getattr open read };
++allow collectd_t logrotate_t:dir search;
++allow collectd_t logrotate_t:file { getattr open read };
++allow collectd_t memcached_t:dir search;
++allow collectd_t memcached_t:file { getattr open read };
++allow collectd_t ntpd_t:dir search;
++allow collectd_t ntpd_t:file { getattr open read };
++allow collectd_t rabbitmq_beam_t:dir search;
++allow collectd_t rabbitmq_beam_t:file { getattr open read };
++allow collectd_t rabbitmq_epmd_t:dir search;
++allow collectd_t rabbitmq_epmd_t:file { getattr open read };
++allow collectd_t restorecond_t:dir search;
++allow collectd_t restorecond_t:file { getattr open read };
++allow collectd_t rsync_t:dir search;
++allow collectd_t rsync_t:file { getattr open read };
++allow collectd_t self:capability dac_read_search;
++allow collectd_t snmpd_t:dir search;
++allow collectd_t snmpd_t:file { getattr open read };
++allow collectd_t sshd_t:dir search;
++allow collectd_t sshd_t:file { getattr open read };
++allow collectd_t syslogd_t:dir search;
++allow collectd_t syslogd_t:file { getattr open read };
++allow collectd_t system_dbusd_t:dir search;
++allow collectd_t system_dbusd_t:file { getattr open read };
++allow collectd_t systemd_logind_t:dir search;
++allow collectd_t systemd_logind_t:file { getattr open read };
++allow collectd_t udev_t:dir search;
++allow collectd_t udev_t:file { getattr open read };
++allow collectd_t unconfined_t:dir search;
++allow collectd_t unconfined_t:file { getattr open read };
++allow collectd_t vmware_tools_t:dir search;
++allow collectd_t vmware_tools_t:file { getattr open read };
++allow collectd_t vmware_vgauth_service_t:dir search;
++allow collectd_t vmware_vgauth_service_t:file { getattr open read };
++
++#============= httpd_t ==============
++allow httpd_t initrc_t:unix_stream_socket connectto;
++allow httpd_t var_run_t:sock_file write;
++allow httpd_t http_port_t:tcp_socket name_connect;
++allow httpd_t self:capability net_raw;
++allow httpd_t unreserved_port_t:tcp_socket name_connect;
++
++
++#============= initrc_t ==============
++allow initrc_t self:process execmem;
++
++#============= ipsec_mgmt_t ==============
++allow ipsec_mgmt_t initrc_tmp_t:dir { getattr search };
++allow ipsec_mgmt_t initrc_tmp_t:file { getattr write };
++allow ipsec_mgmt_t self:netlink_xfrm_socket { nlmsg_read nlmsg_write read write };
++allow ipsec_mgmt_t self:process signull;
++allow ipsec_mgmt_t self:unix_stream_socket connectto;
++
++#============= logrotate_t ==============
++allow logrotate_t proc_t:filesystem getattr;
++
++#============= rabbitmq_beam_t ==============
++allow rabbitmq_beam_t binfmt_misc_fs_t:dir getattr;
++allow rabbitmq_beam_t boot_t:dir search;
++allow rabbitmq_beam_t bpf_t:dir getattr;
++allow rabbitmq_beam_t configfs_t:dir getattr;
++allow rabbitmq_beam_t dosfs_t:dir getattr;
++allow rabbitmq_beam_t etc_runtime_t:file { getattr open read };
++allow rabbitmq_beam_t hugetlbfs_t:dir getattr;
++allow rabbitmq_beam_t node_t:udp_socket node_bind;
++allow rabbitmq_beam_t pstore_t:dir getattr;
++allow rabbitmq_beam_t rabbitmq_var_log_t:file { read write };
++allow rabbitmq_beam_t tmp_t:dir getattr;
++allow rabbitmq_beam_t tmpfs_t:dir getattr;
++allow rabbitmq_beam_t tracefs_t:dir getattr;
++allow rabbitmq_beam_t user_runtime_root_t:dir search;
++allow rabbitmq_beam_t user_runtime_t:dir getattr;
++allow rabbitmq_beam_t var_lock_t:dir getattr;
++
++#============= sshd_t ==============
++allow sshd_t user_home_dir_t:file getattr;
++allow sshd_t var_log_t:file { create getattr lock open read setattr unlink write };
++
++#============= syslogd_t ==============
++allow syslogd_t amqp_port_t:tcp_socket name_connect;
++allow syslogd_t bin_t:dir search;
++allow syslogd_t bin_t:file { execute execute_no_trans map open read };
++allow syslogd_t bin_t:lnk_file read;
++allow syslogd_t cgroup_t:file { getattr open read };
++allow syslogd_t node_t:tcp_socket node_bind;
++allow syslogd_t self:process getpgid;
++allow syslogd_t self:tcp_socket { accept listen };
++allow syslogd_t shell_exec_t:file { execute execute_no_trans map open read };
++allow syslogd_t unreserved_port_t:tcp_socket name_connect;
++allow syslogd_t rsh_port_t:tcp_socket name_connect;
++
++#============= systemd_logind_t ==============
++allow systemd_logind_t unconfined_t:fd use;
++
++#============= vmware_tools_t ==============
++allow vmware_tools_t boot_t:dir search;
++allow vmware_tools_t dosfs_t:filesystem getattr;
++allow vmware_tools_t etc_runtime_t:file getattr;
