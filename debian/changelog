@@ -1,3 +1,9 @@
+refpolicy (2:2.20250213-10+pexip25u4) pexip-trixie; urgency=medium
+
+  * Add more policies based on nightly runtime exceptions.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Fri, 14 Aug 2026 12:06:46 +0100
+
 refpolicy (2:2.20250213-10+pexip25u3) pexip-trixie; urgency=medium
 
   * Add Pexip policy module

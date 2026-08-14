@@ -1,20 +1,21 @@
 --- /dev/null
-+++ refpolicy/policy/modules/system/pexip.fc
++++ b/policy/modules/system/pexip.fc
 @@ -0,0 +1,2 @@
 +
 +
 --- /dev/null
-+++ refpolicy/policy/modules/system/pexip.if
++++ b/policy/modules/system/pexip.if
 @@ -0,0 +1,2 @@
 +## <summary>PexOS rules.</summary>
 +
 --- /dev/null
-+++ refpolicy/policy/modules/system/pexip.te
-@@ -0,0 +1,193 @@
++++ b/policy/modules/system/pexip.te
+@@ -0,0 +1,368 @@
 +policy_module(pexip)
 +
 +require {
 +	type amqp_port_t;
++	type apt_t;
 +	type auditd_t;
 +	type binfmt_misc_fs_t;
 +	type bin_t;
@@ -24,23 +25,37 @@
 +	type chkpwd_t;
 +	type collectd_t;
 +	type configfs_t;
++	type dhcpc_t;
 +	type dosfs_t;
 +	type dpkg_script_t;
 +	type dpkg_t;
 +	type entropyd_t;
++	type etc_t;
 +	type etc_runtime_t;
++	type gatekeeper_port_t;
 +	type getty_t;
++	type hi_reserved_port_t;
 +	type httpd_t;
 +	type http_port_t;
 +	type hugetlbfs_t;
 +	type initrc_t;
++	type initrc_runtime_t;
 +	type initrc_tmp_t;
 +	type init_t;
 +	type ipsec_mgmt_t;
++	type ipsecnat_port_t;
++	type ipsec_key_file_t;
++	type iptables_t;
++	type isakmp_port_t;
 +	type kernel_t;
++	type ldconfig_exec_t;
++	type local_login_t;
 +	type logrotate_t;
 +	type memcached_t;
++	type mysqld_port_t;
++	type net_conf_t;
 +	type node_t;
++	type ntop_port_t;
 +	type ntpd_t;
 +	type proc_t;
 +	type pstore_t;
@@ -50,17 +65,30 @@
 +	type restorecond_t;
 +	type rsh_port_t;
 +	type rsync_t;
++	type shadow_t;
++	type shadow_lock_t;
 +	type shell_exec_t;
 +	type snmpd_t;
 +	type sshd_t;
++	type sysctl_kernel_t;
++	type sysctl_vm_overcommit_t;
++	type sysctl_vm_t;
 +	type syslogd_t;
++	type syslogd_port_t;
++	type syslogd_var_lib_t;
 +	type system_dbusd_t;
++	type systemd_generator_t;
++	type systemd_hostnamed_t;
 +	type systemd_logind_t;
++	type systemd_runtime_notify_t;
++	type systemd_tmpfiles_t;
++	type systemd_user_runtime_dir_t;
 +	type tmpfs_t;
 +	type tmp_t;
 +	type tracefs_t;
 +	type udev_t;
 +	type unconfined_t;
++	type unlabeled_t;
 +	type unreserved_port_t;
 +	type user_home_dir_t;
 +	type user_runtime_root_t;
@@ -68,15 +96,17 @@
 +	type var_lock_t;
 +	type var_log_t;
 +	type var_run_t;
++	type virt_migration_port_t;
 +	type vmware_tools_t;
 +	type vmware_vgauth_service_t;
++	type zope_port_t;
 +	class capability { dac_read_search net_raw };
 +	class dir { getattr search };
 +	class fd use;
 +	class file { create execute execute_no_trans getattr lock map open read setattr unlink write };
 +	class filesystem getattr;
 +	class lnk_file read;
-+	class netlink_xfrm_socket { nlmsg_read nlmsg_write read write };
++	class netlink_xfrm_socket { create ioctl nlmsg_read nlmsg_write read write };
 +	class process { execmem getpgid signull };
 +	class sock_file write;
 +	class tcp_socket { accept listen name_connect node_bind };
@@ -85,16 +115,21 @@
 +}
 +
 +#============= collectd_t ==============
++allow collectd_t apt_t:dir search;
++allow collectd_t apt_t:file { getattr open read };
 +allow collectd_t auditd_t:dir search;
 +allow collectd_t auditd_t:file { getattr open read };
 +allow collectd_t chkpwd_t:dir search;
 +allow collectd_t chkpwd_t:file { getattr open read };
++allow collectd_t dhcpc_t:dir search;
++allow collectd_t dhcpc_t:file { getattr open read };
 +allow collectd_t dpkg_script_t:dir search;
 +allow collectd_t dpkg_script_t:file { getattr open read };
 +allow collectd_t dpkg_t:dir search;
 +allow collectd_t dpkg_t:file { getattr open read };
 +allow collectd_t entropyd_t:dir search;
 +allow collectd_t entropyd_t:file { getattr open read };
++allow collectd_t etc_runtime_t:file { getattr open read };
 +allow collectd_t getty_t:dir search;
 +allow collectd_t getty_t:file { getattr open read };
 +allow collectd_t httpd_t:dir search;
@@ -105,12 +140,18 @@
 +allow collectd_t initrc_t:file { getattr open read };
 +allow collectd_t ipsec_mgmt_t:dir search;
 +allow collectd_t ipsec_mgmt_t:file { getattr open read };
++allow collectd_t iptables_t:dir search;
++allow collectd_t iptables_t:file { getattr open read };
 +allow collectd_t kernel_t:dir search;
 +allow collectd_t kernel_t:file { getattr open read };
++allow collectd_t local_login_t:dir search;
++allow collectd_t local_login_t:file { getattr open read };
 +allow collectd_t logrotate_t:dir search;
 +allow collectd_t logrotate_t:file { getattr open read };
 +allow collectd_t memcached_t:dir search;
 +allow collectd_t memcached_t:file { getattr open read };
++allow collectd_t node_t:udp_socket node_bind;
++allow collectd_t ntop_port_t:tcp_socket name_connect;
 +allow collectd_t ntpd_t:dir search;
 +allow collectd_t ntpd_t:file { getattr open read };
 +allow collectd_t rabbitmq_beam_t:dir search;
@@ -122,20 +163,31 @@
 +allow collectd_t rsync_t:dir search;
 +allow collectd_t rsync_t:file { getattr open read };
 +allow collectd_t self:capability dac_read_search;
++allow collectd_t self:capability sys_ptrace;
++allow collectd_t self:netlink_generic_socket { bind create getattr read write };
 +allow collectd_t snmpd_t:dir search;
 +allow collectd_t snmpd_t:file { getattr open read };
 +allow collectd_t sshd_t:dir search;
 +allow collectd_t sshd_t:file { getattr open read };
++allow collectd_t sysctl_vm_overcommit_t:file { open read };
++allow collectd_t sysctl_vm_t:dir search;
 +allow collectd_t syslogd_t:dir search;
 +allow collectd_t syslogd_t:file { getattr open read };
 +allow collectd_t system_dbusd_t:dir search;
 +allow collectd_t system_dbusd_t:file { getattr open read };
++allow collectd_t systemd_generator_t:dir search;
++allow collectd_t systemd_generator_t:file { getattr open read };
++allow collectd_t systemd_hostnamed_t:dir search;
++allow collectd_t systemd_hostnamed_t:file { getattr open read };
 +allow collectd_t systemd_logind_t:dir search;
 +allow collectd_t systemd_logind_t:file { getattr open read };
++allow collectd_t systemd_user_runtime_dir_t:dir search;
++allow collectd_t systemd_user_runtime_dir_t:file { getattr open read };
 +allow collectd_t udev_t:dir search;
 +allow collectd_t udev_t:file { getattr open read };
 +allow collectd_t unconfined_t:dir search;
 +allow collectd_t unconfined_t:file { getattr open read };
++allow collectd_t unreserved_port_t:udp_socket name_bind;
 +allow collectd_t vmware_tools_t:dir search;
 +allow collectd_t vmware_tools_t:file { getattr open read };
 +allow collectd_t vmware_vgauth_service_t:dir search;
@@ -147,41 +199,78 @@
 +allow httpd_t http_port_t:tcp_socket name_connect;
 +allow httpd_t self:capability net_raw;
 +allow httpd_t unreserved_port_t:tcp_socket name_connect;
++allow httpd_t unreserved_port_t:tcp_socket name_bind;
++# zope_port_t is 8021 which we use for local apt repo
++allow httpd_t zope_port_t:tcp_socket name_bind;
 +
++#============= getty_t ==============
++allow getty_t tmpfs_t:dir { getattr open read };
 +
 +#============= initrc_t ==============
 +allow initrc_t self:process execmem;
 +
 +#============= ipsec_mgmt_t ==============
++allow ipsec_mgmt_t etc_runtime_t:file map;
 +allow ipsec_mgmt_t initrc_tmp_t:dir { getattr search };
-+allow ipsec_mgmt_t initrc_tmp_t:file { getattr write };
-+allow ipsec_mgmt_t self:netlink_xfrm_socket { nlmsg_read nlmsg_write read write };
-+allow ipsec_mgmt_t self:process signull;
++allow ipsec_mgmt_t initrc_tmp_t:file { getattr map open read write };
++allow ipsec_mgmt_t ipsec_key_file_t:file map;
++allow ipsec_mgmt_t ipsecnat_port_t:udp_socket name_bind;
++allow ipsec_mgmt_t isakmp_port_t:udp_socket name_bind;
++allow ipsec_mgmt_t kernel_t:system module_request;
++allow ipsec_mgmt_t node_t:udp_socket node_bind;
++allow ipsec_mgmt_t self:capability net_bind_service;
++allow ipsec_mgmt_t self:netlink_route_socket { bind create nlmsg_read nlmsg_write read setopt write };
++allow ipsec_mgmt_t self:netlink_xfrm_socket { create ioctl nlmsg_read nlmsg_write read write };
++allow ipsec_mgmt_t self:process { getcap setcap signull };
 +allow ipsec_mgmt_t self:unix_stream_socket connectto;
++
++#============= local_login_t ==============
++allow local_login_t etc_t:dir { add_name remove_name };
++allow local_login_t etc_t:file create;
++allow local_login_t shadow_lock_t:file { lock open write };
++allow local_login_t shadow_t:file { rename setattr unlink };
++allow local_login_t tmpfs_t:dir read;
++allow local_login_t user_home_dir_t:dir { add_name create };
++allow local_login_t user_home_dir_t:file { create getattr open write };
 +
 +#============= logrotate_t ==============
 +allow logrotate_t proc_t:filesystem getattr;
++
++#============= ntpd_t ==============
++allow ntpd_t ldconfig_exec_t:file { execute execute_no_trans map open read };
 +
 +#============= rabbitmq_beam_t ==============
 +allow rabbitmq_beam_t binfmt_misc_fs_t:dir getattr;
 +allow rabbitmq_beam_t boot_t:dir search;
 +allow rabbitmq_beam_t bpf_t:dir getattr;
++allow rabbitmq_beam_t cgroup_t:file { open read };
 +allow rabbitmq_beam_t configfs_t:dir getattr;
 +allow rabbitmq_beam_t dosfs_t:dir getattr;
 +allow rabbitmq_beam_t etc_runtime_t:file { getattr open read };
++allow rabbitmq_beam_t etc_t:file write;
++allow rabbitmq_beam_t gatekeeper_port_t:tcp_socket name_bind;
 +allow rabbitmq_beam_t hugetlbfs_t:dir getattr;
 +allow rabbitmq_beam_t node_t:udp_socket node_bind;
 +allow rabbitmq_beam_t pstore_t:dir getattr;
 +allow rabbitmq_beam_t rabbitmq_var_log_t:file { read write };
++allow rabbitmq_beam_t self:process { execmem getsched };
++allow rabbitmq_beam_t self:unix_dgram_socket { create getopt write };
++allow rabbitmq_beam_t sysctl_vm_overcommit_t:file { open read };
++allow rabbitmq_beam_t sysctl_vm_t:dir search;
++allow rabbitmq_beam_t systemd_runtime_notify_t:sock_file read;
 +allow rabbitmq_beam_t tmp_t:dir getattr;
 +allow rabbitmq_beam_t tmpfs_t:dir getattr;
++allow rabbitmq_beam_t tmpfs_t:file { execute map read write };
 +allow rabbitmq_beam_t tracefs_t:dir getattr;
++allow rabbitmq_beam_t unreserved_port_t:tcp_socket name_bind;
 +allow rabbitmq_beam_t user_runtime_root_t:dir search;
 +allow rabbitmq_beam_t user_runtime_t:dir getattr;
 +allow rabbitmq_beam_t var_lock_t:dir getattr;
++allow rabbitmq_beam_t virt_migration_port_t:tcp_socket name_bind;
 +
 +#============= sshd_t ==============
-+allow sshd_t user_home_dir_t:file getattr;
++allow sshd_t user_home_dir_t:file { create getattr open write };
++allow sshd_t user_home_dir_t:dir { add_name create };
 +allow sshd_t var_log_t:file { create getattr lock open read setattr unlink write };
 +
 +#============= syslogd_t ==============
@@ -190,17 +279,103 @@
 +allow syslogd_t bin_t:file { execute execute_no_trans map open read };
 +allow syslogd_t bin_t:lnk_file read;
 +allow syslogd_t cgroup_t:file { getattr open read };
++allow syslogd_t etc_t:dir watch;
++allow syslogd_t hi_reserved_port_t:udp_socket name_bind;
++allow syslogd_t mysqld_port_t:tcp_socket name_connect;
 +allow syslogd_t node_t:tcp_socket node_bind;
++allow syslogd_t node_t:udp_socket node_bind;
++allow syslogd_t rsh_port_t:tcp_socket name_bind;
++allow syslogd_t self:capability net_bind_service;
 +allow syslogd_t self:process getpgid;
 +allow syslogd_t self:tcp_socket { accept listen };
 +allow syslogd_t shell_exec_t:file { execute execute_no_trans map open read };
++allow syslogd_t syslogd_port_t:udp_socket name_bind;
++allow syslogd_t syslogd_var_lib_t:sock_file { create getattr unlink };
 +allow syslogd_t unreserved_port_t:tcp_socket name_connect;
 +allow syslogd_t rsh_port_t:tcp_socket name_connect;
 +
 +#============= systemd_logind_t ==============
++allow systemd_logind_t initrc_runtime_t:dir { getattr open read };
++allow systemd_logind_t initrc_t:dir search;
++allow systemd_logind_t initrc_t:file { getattr ioctl open read };
 +allow systemd_logind_t unconfined_t:fd use;
 +
++#============= systemd_tmpfiles_t ==============
++allow systemd_tmpfiles_t bin_t:dir search;
++allow systemd_tmpfiles_t bin_t:lnk_file { getattr read };
++allow systemd_tmpfiles_t unlabeled_t:dir getattr;
++
++#============= udev_t ==============
++allow udev_t sysctl_kernel_t:file write;
++
 +#============= vmware_tools_t ==============
++allow vmware_tools_t auditd_t:dir { getattr search };
++allow vmware_tools_t auditd_t:file { open read };
++allow vmware_tools_t auditd_t:lnk_file read;
 +allow vmware_tools_t boot_t:dir search;
++allow vmware_tools_t collectd_t:dir { getattr search };
++allow vmware_tools_t collectd_t:file { open read };
++allow vmware_tools_t collectd_t:lnk_file read;
 +allow vmware_tools_t dosfs_t:filesystem getattr;
-+allow vmware_tools_t etc_runtime_t:file getattr;
++allow vmware_tools_t entropyd_t:dir { getattr search };
++allow vmware_tools_t entropyd_t:file { open read };
++allow vmware_tools_t entropyd_t:lnk_file read;
++allow vmware_tools_t etc_runtime_t:file { getattr open read };
++allow vmware_tools_t getty_t:dir { getattr search };
++allow vmware_tools_t getty_t:file { open read };
++allow vmware_tools_t getty_t:lnk_file read;
++allow vmware_tools_t httpd_t:dir { getattr search };
++allow vmware_tools_t httpd_t:file { open read };
++allow vmware_tools_t httpd_t:lnk_file read;
++allow vmware_tools_t initrc_t:dir { getattr search };
++allow vmware_tools_t initrc_t:file { open read };
++allow vmware_tools_t initrc_t:lnk_file read;
++allow vmware_tools_t ipsec_mgmt_t:dir { getattr search };
++allow vmware_tools_t ipsec_mgmt_t:file { open read };
++allow vmware_tools_t ipsec_mgmt_t:lnk_file read;
++allow vmware_tools_t kernel_t:dir { getattr search };
++allow vmware_tools_t kernel_t:file { open read };
++allow vmware_tools_t kernel_t:lnk_file read;
++allow vmware_tools_t memcached_t:dir { getattr search };
++allow vmware_tools_t memcached_t:file { open read };
++allow vmware_tools_t memcached_t:lnk_file read;
++allow vmware_tools_t net_conf_t:file { getattr open read };
++allow vmware_tools_t ntpd_t:dir { getattr search };
++allow vmware_tools_t ntpd_t:file { open read };
++allow vmware_tools_t ntpd_t:lnk_file read;
++allow vmware_tools_t rabbitmq_beam_t:dir { getattr search };
++allow vmware_tools_t rabbitmq_beam_t:file { open read };
++allow vmware_tools_t rabbitmq_beam_t:lnk_file read;
++allow vmware_tools_t rabbitmq_epmd_t:dir { getattr search };
++allow vmware_tools_t rabbitmq_epmd_t:file { open read };
++allow vmware_tools_t rabbitmq_epmd_t:lnk_file read;
++allow vmware_tools_t restorecond_t:dir { getattr search };
++allow vmware_tools_t restorecond_t:file { open read };
++allow vmware_tools_t restorecond_t:lnk_file read;
++allow vmware_tools_t rsync_t:dir { getattr search };
++allow vmware_tools_t rsync_t:file { open read };
++allow vmware_tools_t rsync_t:lnk_file read;
++allow vmware_tools_t self:capability sys_ptrace;
++allow vmware_tools_t snmpd_t:dir { getattr search };
++allow vmware_tools_t snmpd_t:file { open read };
++allow vmware_tools_t snmpd_t:lnk_file read;
++allow vmware_tools_t sshd_t:dir { getattr search };
++allow vmware_tools_t sshd_t:file { open read };
++allow vmware_tools_t sshd_t:lnk_file read;
++allow vmware_tools_t sysctl_vm_overcommit_t:file { open read };
++allow vmware_tools_t sysctl_vm_t:dir search;
++allow vmware_tools_t syslogd_t:dir { getattr search };
++allow vmware_tools_t syslogd_t:file { open read };
++allow vmware_tools_t syslogd_t:lnk_file read;
++allow vmware_tools_t system_dbusd_t:dir { getattr search };
++allow vmware_tools_t system_dbusd_t:file { open read };
++allow vmware_tools_t system_dbusd_t:lnk_file read;
++allow vmware_tools_t systemd_logind_t:dir { getattr search };
++allow vmware_tools_t systemd_logind_t:file { open read };
++allow vmware_tools_t systemd_logind_t:lnk_file read;
++allow vmware_tools_t udev_t:dir { getattr search };
++allow vmware_tools_t udev_t:file { open read };
++allow vmware_tools_t udev_t:lnk_file read;
++allow vmware_tools_t vmware_vgauth_service_t:dir { getattr search };
++allow vmware_tools_t vmware_vgauth_service_t:file { open read };
++allow vmware_tools_t vmware_vgauth_service_t:lnk_file read;
