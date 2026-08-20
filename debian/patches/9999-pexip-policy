@@ -10,7 +10,7 @@
 +
 --- /dev/null
 +++ b/policy/modules/system/pexip.te
-@@ -0,0 +1,385 @@
+@@ -0,0 +1,430 @@
 +policy_module(pexip)
 +
 +require {
@@ -26,6 +26,9 @@
 +	type chkpwd_t;
 +	type collectd_t;
 +	type configfs_t;
++	type container_engine_t;
++	type container_engine_tmpfs_t;
++	type devpts_t;
 +	type dhcpc_t;
 +	type dosfs_t;
 +	type dpkg_script_t;
@@ -37,6 +40,7 @@
 +	type getty_t;
 +	type hi_reserved_port_t;
 +	type httpd_t;
++	type http_cache_port_t;
 +	type http_port_t;
 +	type hugetlbfs_t;
 +	type initrc_t;
@@ -49,6 +53,7 @@
 +	type iptables_t;
 +	type isakmp_port_t;
 +	type kernel_t;
++	type kmod_t;
 +	type ldconfig_exec_t;
 +	type local_login_t;
 +	type logrotate_t;
@@ -96,21 +101,27 @@
 +	type user_runtime_root_t;
 +	type user_runtime_t;
 +	type usr_t;
++	type var_lib_t;
 +	type var_lock_t;
 +	type var_log_t;
 +	type var_run_t;
 +	type virt_migration_port_t;
 +	type vmware_tools_t;
 +	type vmware_vgauth_service_t;
++	type xen_port_t;
 +	type zope_port_t;
++	class anon_inode { create map read write };
 +	class capability { dac_read_search net_raw };
++	class dbus send_msg;
 +	class dir { getattr search };
 +	class fd use;
 +	class file { create execute execute_no_trans getattr lock map open read setattr unlink write };
 +	class filesystem getattr;
++	class io_uring sqpoll;
 +	class lnk_file read;
 +	class netlink_xfrm_socket { create ioctl nlmsg_read nlmsg_write read write };
 +	class process { execmem getpgid signull };
++	class shm { associate create destroy getattr read unix_read unix_write write };
 +	class sock_file write;
 +	class tcp_socket { accept listen name_connect node_bind };
 +	class udp_socket node_bind;
@@ -196,9 +207,36 @@
 +allow collectd_t vmware_vgauth_service_t:dir search;
 +allow collectd_t vmware_vgauth_service_t:file { getattr open read };
 +
++#============= container_engine_t ==============
++allow container_engine_t container_engine_tmpfs_t:chr_file map;
++allow container_engine_t devpts_t:filesystem remount;
++allow container_engine_t init_t:dbus send_msg;
++allow container_engine_t init_t:system start;
++allow container_engine_t initrc_runtime_t:dir search;
++allow container_engine_t initrc_runtime_t:dir { open read watch };
++allow container_engine_t initrc_runtime_t:file { open read };
++allow container_engine_t initrc_runtime_t:lnk_file { getattr read };
++allow container_engine_t initrc_t:fifo_file setattr;
++allow container_engine_t self:anon_inode { create map read write };
++allow container_engine_t self:io_uring sqpoll;
++allow container_engine_t self:process execmem;
++allow container_engine_t self:shm { associate create destroy getattr read unix_read unix_write write };
++allow container_engine_t sysctl_vm_t:dir search;
++allow container_engine_t sysctl_vm_t:file { getattr open read };
++allow container_engine_t unreserved_port_t:tcp_socket name_connect;
++allow container_engine_t var_lib_t:dir mounton;
++allow container_engine_t var_lib_t:dir { relabelto setattr };
++allow container_engine_t var_lib_t:file { append create execute execute_no_trans ioctl map open read relabelfrom relabelto setattr write };
++allow container_engine_t var_lib_t:file mounton;
++allow container_engine_t var_lib_t:lnk_file { getattr read };
++# xen_port_t is 8002
++allow container_engine_t xen_port_t:tcp_socket name_connect;
++
 +#============= httpd_t ==============
 +allow httpd_t initrc_t:unix_stream_socket connectto;
 +allow httpd_t var_run_t:sock_file write;
++# http_cache_port_t is 3128/3130/8080/8118 some of which are used in AIMS
++allow httpd_t http_cache_port_t:tcp_socket name_connect;
 +allow httpd_t http_port_t:tcp_socket name_connect;
 +allow httpd_t self:capability net_raw;
 +allow httpd_t unreserved_port_t:tcp_socket name_connect;
@@ -227,6 +265,9 @@
 +allow ipsec_mgmt_t self:process { getcap setcap signull };
 +allow ipsec_mgmt_t self:unix_stream_socket connectto;
 +
++#============= kmod_t ==============
++allow kmod_t initrc_runtime_t:file { read write };
++
 +#============= local_login_t ==============
 +typeattribute local_login_t can_write_shadow_passwords;
 +allow local_login_t etc_t:dir { add_name remove_name };
@@ -242,6 +283,7 @@
 +
 +#============= ntpd_t ==============
 +allow ntpd_t ldconfig_exec_t:file { execute execute_no_trans map open read };
++allow ntpd_t unconfined_t:fd use;
 +
 +#============= rabbitmq_beam_t ==============
 +allow rabbitmq_beam_t binfmt_misc_fs_t:dir getattr;
@@ -330,6 +372,9 @@
 +allow vmware_tools_t collectd_t:dir { getattr search };
 +allow vmware_tools_t collectd_t:file { open read };
 +allow vmware_tools_t collectd_t:lnk_file read;
++allow vmware_tools_t container_engine_t:dir { getattr search };
++allow vmware_tools_t container_engine_t:file { open read };
++allow vmware_tools_t container_engine_t:lnk_file read;
 +allow vmware_tools_t dosfs_t:filesystem getattr;
 +allow vmware_tools_t entropyd_t:dir { getattr search };
 +allow vmware_tools_t entropyd_t:file { open read };

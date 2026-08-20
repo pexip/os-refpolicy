@@ -1,3 +1,9 @@
+refpolicy (2:2.20250213-10+pexip25u6) pexip-trixie; urgency=medium
+
+  * Update with rules from AIMS nightly.
+
+ -- Mark Hymers <mark.hymers@pexip.com>  Thu, 20 Aug 2026 14:23:56 +0100
+
 refpolicy (2:2.20250213-10+pexip25u5) pexip-trixie; urgency=medium
 
   * Add more policies based on nightly runtime exceptions.
