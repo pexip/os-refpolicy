@@ -2791,6 +2791,13 @@ udev = base
 # 
 unconfined = module
 
+# Layer: admin
+# Module: usbguard
+#
+# Policy for usb device control
+# 
+usbguard = module
+
 # Layer: system
 # Module: userdomain
 #
